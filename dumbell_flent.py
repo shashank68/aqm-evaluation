@@ -1,5 +1,11 @@
+import os
+import time
+
 from nest.experiment import *
 from nest.topology import *
+from nest.engine.exec import exec_subprocess
+
+from multiprocessing import Process
 
 ##############################
 # Topology: Dumbbell
@@ -17,27 +23,25 @@ from nest.topology import *
 #
 ##############################
 
-TOTAL_LATENCY = 4
+TOTAL_LATENCY = 4  # Total Round trip latency
+BOTTLENECK_BANDWIDTH = 80
+
+TCP_FLOWS = 5
+UDP_FLOWS = 2
+AQM = "fq_codel"
+CONG_ALGO = "reno"
+
+TOTAL_NODES_PER_SIDE = TCP_FLOWS + UDP_FLOWS
 
 client_router_latency = TOTAL_LATENCY / 8
 router_router_latency = TOTAL_LATENCY / 4
 
-client_router_latency  = str(client_router_latency) + "ms"
+client_router_latency = str(client_router_latency) + "ms"
 router_router_latency = str(router_router_latency) + "ms"
 
-BOTTLENECK_BANDW = 80
 
-client_router_bandwidth = str(BOTTLENECK_BANDW * 100) + "mbit"
-BOTTLENECK_BANDW  = str(BOTTLENECK_BANDW) + "mbit"
-
-
-
-TCP_FLOWS = 5
-UDP_FLOWS = 2
-AQM = 'fq_codel' # fq_codel, codel, pie, fq_pie
-CONG_ALGO = 'reno'
-
-TOTAL_NODES_PER_SIDE = TCP_FLOWS + UDP_FLOWS
+client_router_bandwidth = str(BOTTLENECK_BANDWIDTH * 100) + "mbit"
+bottleneck_bandwidth = str(BOTTLENECK_BANDWIDTH) + "mbit"
 
 # Assigning number of nodes on either sides of the dumbbell according to input
 num_of_left_nodes = TOTAL_NODES_PER_SIDE
@@ -156,51 +160,72 @@ right_router.add_route("DEFAULT", right_router_connection)
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
 for i in range(num_of_left_nodes):
-    left_node_connections[i][0].set_attributes(client_router_bandwidth, client_router_latency)
-    left_node_connections[i][1].set_attributes(client_router_bandwidth, client_router_latency)
+    left_node_connections[i][0].set_attributes(
+        client_router_bandwidth, client_router_latency
+    )
+    left_node_connections[i][1].set_attributes(
+        client_router_bandwidth, client_router_latency
+    )
 
 # Setting up the attributes of the connections between
 # the nodes on the right-side and the right-router
 for i in range(num_of_right_nodes):
-    right_node_connections[i][0].set_attributes(client_router_bandwidth, client_router_latency)
-    right_node_connections[i][1].set_attributes(client_router_bandwidth, client_router_latency)
+    right_node_connections[i][0].set_attributes(
+        client_router_bandwidth, client_router_latency
+    )
+    right_node_connections[i][1].set_attributes(
+        client_router_bandwidth, client_router_latency
+    )
 
 
 # Setting up the attributes of the connections between
 # the two routers
-left_router_connection.set_attributes(BOTTLENECK_BANDW, router_router_latency, AQM)
-right_router_connection.set_attributes(BOTTLENECK_BANDW, router_router_latency, AQM)
+left_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM)
+right_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM)
 
 
-subprocess.exec("sudo -u ${SUDO_USER} ssh-keygen -q -t rsa -f /home/${SUDO_USER}/.ssh/id_rsa -N "" > /dev/null")
-	cat /home/${SUDO_USER}/.ssh/authorized_keys 2> /dev/null | grep "$(cat /home/${SUDO_USER}/.ssh/id_rsa.pub)" > /dev/null
+# subprocess.exec("sudo -u ${SUDO_USER} ssh-keygen -q -t rsa -f /home/${SUDO_USER}/.ssh/id_rsa -N "" > /dev/null")
+# 	cat /home/${SUDO_USER}/.ssh/authorized_keys 2> /dev/null | grep "$(cat /home/${SUDO_USER}/.ssh/id_rsa.pub)" > /dev/null
 
-if id_rsa != authorized_keys
-    sudo -u ${SUDO_USER} bash -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
+# if id_rsa != authorized_keys
+#     sudo -u ${SUDO_USER} bash -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
 
-for each of left_node:
-    exec(ip netns left+node 	ip netns exec client sudo -u ${SUDO_USER} bash -c "ssh-keyscan -4 -t rsa left_router >> ~/.ssh/known_hosts > /dev/null"
-)
-
-cmd  = f"flent {test_name} --host {} 
+# for each of left_node:
+#     exec(ip netns left+node 	ip netns exec client sudo -u ${SUDO_USER} bash -c "ssh-keyscan -4 -t rsa left_router >> ~/.ssh/known_hosts > /dev/null"
+# )
 
 
+FLENT_TEST_NAME = "tcp_nup"
+TEST_DURATION = 60
 
+artifacts_dir = FLENT_TEST_NAME + time.strftime("%d-%m_%H:%M:%S.dump")
+os.mkdir(artifacts_dir)
+workers_list = []
 
-######  RUN TESTS ######
+for i in range(TOTAL_NODES_PER_SIDE):
+    cmd = f"ip netns exec {right_nodes[i].id} netserver"
+    exec_subprocess(cmd)
 
-experiment = Experiment(AQM + "_" + CONG_ALGO)
+for i in range(TOTAL_NODES_PER_SIDE):
+    src_node = left_nodes[i]
+    node_dir = f"{artifacts_dir}/{src_node.name}"
+    os.mkdir(node_dir)
 
+    cmd = f"""
+        ip netns exec {src_node.id} flent {FLENT_TEST_NAME} \
+        --test-parameter upload_streams=1 \
+        --socket-stats \
+        --length {TEST_DURATION} \
+        --host {right_node_connections[i][0].address.get_addr(with_subnet=False)} \
+        --output {node_dir}/output.txt \
+        --data-dir {node_dir} \
+        --log-file {node_dir}/debug.log
+        """
 
+    workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
-cmd = ["ip netns left_node[0].name exec flent rrull -H afff", "fadfa"]
+for worker in workers_list:
+    worker.start()
 
-workers = Popen(cmd)
-
-
-exp = Process(workers)
-
-exp.start()
-exp.join()
-
-
+for worker in workers_list:
+    worker.join()
