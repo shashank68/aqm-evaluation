@@ -17,9 +17,24 @@ from nest.topology import *
 #
 ##############################
 
+TOTAL_LATENCY = 4
+
+client_router_latency = TOTAL_LATENCY / 8
+router_router_latency = TOTAL_LATENCY / 4
+
+client_router_latency  = str(client_router_latency) + "ms"
+router_router_latency = str(router_router_latency) + "ms"
+
+BOTTLENECK_BANDW = 80
+
+client_router_bandwidth = str(BOTTLENECK_BANDW * 100) + "mbit"
+BOTTLENECK_BANDW  = str(BOTTLENECK_BANDW) + "mbit"
+
+
+
 TCP_FLOWS = 5
 UDP_FLOWS = 2
-AQM = 'pie' # fq_codel, codel, pie, fq_pie
+AQM = 'fq_codel' # fq_codel, codel, pie, fq_pie
 CONG_ALGO = 'reno'
 
 TOTAL_NODES_PER_SIDE = TCP_FLOWS + UDP_FLOWS
@@ -141,44 +156,51 @@ right_router.add_route("DEFAULT", right_router_connection)
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
 for i in range(num_of_left_nodes):
-    left_node_connections[i][0].set_attributes("100mbit", "5ms")
-    left_node_connections[i][1].set_attributes("100mbit", "5ms")
+    left_node_connections[i][0].set_attributes(client_router_bandwidth, client_router_latency)
+    left_node_connections[i][1].set_attributes(client_router_bandwidth, client_router_latency)
 
 # Setting up the attributes of the connections between
 # the nodes on the right-side and the right-router
 for i in range(num_of_right_nodes):
-    right_node_connections[i][0].set_attributes("100mbit", "5ms")
-    right_node_connections[i][1].set_attributes("100mbit", "5ms")
+    right_node_connections[i][0].set_attributes(client_router_bandwidth, client_router_latency)
+    right_node_connections[i][1].set_attributes(client_router_bandwidth, client_router_latency)
 
 
 # Setting up the attributes of the connections between
 # the two routers
-left_router_connection.set_attributes("20mbit", "50ms", AQM)
-right_router_connection.set_attributes("20mbit", "50ms", AQM)
+left_router_connection.set_attributes(BOTTLENECK_BANDW, router_router_latency, AQM)
+right_router_connection.set_attributes(BOTTLENECK_BANDW, router_router_latency, AQM)
+
+
+subprocess.exec("sudo -u ${SUDO_USER} ssh-keygen -q -t rsa -f /home/${SUDO_USER}/.ssh/id_rsa -N "" > /dev/null")
+	cat /home/${SUDO_USER}/.ssh/authorized_keys 2> /dev/null | grep "$(cat /home/${SUDO_USER}/.ssh/id_rsa.pub)" > /dev/null
+
+if id_rsa != authorized_keys
+    sudo -u ${SUDO_USER} bash -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
+
+for each of left_node:
+    exec(ip netns left+node 	ip netns exec client sudo -u ${SUDO_USER} bash -c "ssh-keyscan -4 -t rsa left_router >> ~/.ssh/known_hosts > /dev/null"
+)
+
+cmd  = f"flent {test_name} --host {} 
+
+
+
 
 ######  RUN TESTS ######
 
 experiment = Experiment(AQM + "_" + CONG_ALGO)
 
-# Add TCP flows from the left nodes to respective right nodes
-for i in range(TCP_FLOWS):
-    flow = Flow(
-        left_nodes[i], right_nodes[i], right_node_connections[i][0].address, 0, 60, 1
-    )
-    # Use TCP reno
-    experiment.add_tcp_flow(flow, CONG_ALGO)
 
-# Add UDP flow
-for i in range(TCP_FLOWS, TOTAL_NODES_PER_SIDE):
-    flow = Flow(
-        left_nodes[i], right_nodes[i], right_node_connections[i][0].address, 0, 60, 1
-    )
-    # Use TCP reno
-    experiment.add_udp_flow(flow, target_bandwidth="1mbit")
 
-# Request traffic control stats
-experiment.require_qdisc_stats(left_router_connection)
-experiment.require_qdisc_stats(right_router_connection)
+cmd = ["ip netns left_node[0].name exec flent rrull -H afff", "fadfa"]
 
-# Running the experiment
-experiment.run()
+workers = Popen(cmd)
+
+
+exp = Process(workers)
+
+exp.start()
+exp.join()
+
+
