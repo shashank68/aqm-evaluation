@@ -24,15 +24,18 @@ from multiprocessing import Process
 #
 ##############################
 
+os.path.isfile('~/.ssh/id_rsa')
+exit
+
 TOTAL_LATENCY = 4  # Total Round trip latency
 BOTTLENECK_BANDWIDTH = 80
 
-TCP_FLOWS = 5
-UDP_FLOWS = 2
 AQM = "fq_codel"
 CONG_ALGO = "reno"
 
-TOTAL_NODES_PER_SIDE = TCP_FLOWS + UDP_FLOWS
+ECN = False
+
+TOTAL_NODES_PER_SIDE = 2
 
 client_router_latency = TOTAL_LATENCY / 8
 router_router_latency = TOTAL_LATENCY / 4
@@ -171,37 +174,51 @@ for i in range(num_of_right_nodes):
 # in the right-router's iptables forward the packet to left-router
 right_router.add_route("DEFAULT", right_router_connection)
 
+time.sleep(1000)
+
+qdisc_kwargs = {}
+
+if ECN:
+    qdisc_kwargs = {"ecn": ""}
+
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
 for i in range(num_of_left_nodes):
     left_node_connections[i][0].set_attributes(
-        client_router_bandwidth, client_router_latency
+        client_router_bandwidth, client_router_latency, **qdisc_kwargs
     )
     left_node_connections[i][1].set_attributes(
-        client_router_bandwidth, client_router_latency
+        client_router_bandwidth, client_router_latency, **qdisc_kwargs
     )
 
 # Setting up the attributes of the connections between
 # the nodes on the right-side and the right-router
 for i in range(num_of_right_nodes):
     right_node_connections[i][0].set_attributes(
-        client_router_bandwidth, client_router_latency
+        client_router_bandwidth, client_router_latency, **qdisc_kwargs
     )
     right_node_connections[i][1].set_attributes(
-        client_router_bandwidth, client_router_latency
+        client_router_bandwidth, client_router_latency, **qdisc_kwargs
     )
 
 
 # Setting up the attributes of the connections between
 # the two routers
-left_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM)
-right_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM)
+left_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs)
+right_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs)
 
 subprocess.run(f"./enable_passwordless_ssh.sh {left_nodes[0].id} {left_router.id} {router_ssh_connection.address.get_addr(with_subnet=False)}", check=True, shell=True)
 
 
 FLENT_TEST_NAME = "tcp_nup"
-TEST_DURATION = 60
+TEST_DURATION = 40
+BQL = False
+OFFLOADS = True
+
+NIC_BUFFER = ""
+
+if not OFFLOADS:
+    exec_subprocess
 
 artifacts_dir = FLENT_TEST_NAME + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
@@ -213,6 +230,22 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
 for i in range(TOTAL_NODES_PER_SIDE):
     src_node = left_nodes[i]
+    dest_node = right_nodes[i]
+    
+    if not OFFLOADS:
+        exec_subprocess(f"ip netns e {src_node.id} eththool --offloads {src_node.interfaces[0].id} gro off")
+        exec_subprocess(f"ip netns e {src_node.id} eththool --offloads {src_node.interfaces[0].id} gso off")
+    
+    if NIC_BUFFER:
+        exec_subprocess(f"ip netns e {src_node.id} eththool --set-ring {src_node.interfaces[0].id} tx {NIC_BUFFER}")
+    
+
+    if ECN:
+        src_node.configure_tcp_param("ecn", 1)
+        dest_node.configure_tcp_param("ecn", 1)
+
+
+
     node_dir = f"{artifacts_dir}/{src_node.name}"
     os.mkdir(node_dir)
     os.chmod(node_dir, 0o777)
