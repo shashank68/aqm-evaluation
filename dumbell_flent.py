@@ -1,5 +1,6 @@
 import os
 import time
+import subprocess
 
 from nest.experiment import *
 from nest.topology import *
@@ -84,6 +85,9 @@ for i in range(num_of_left_nodes):
 for i in range(num_of_right_nodes):
     right_node_connections.append(connect(right_nodes[i], right_router))
 
+# Connecting the left router to the first left node to get the router stats through SSH
+(router_ssh_connection, client_ssh_connection) = connect(left_router, left_nodes[0])
+
 # Connecting the two routers
 (left_router_connection, right_router_connection) = connect(left_router, right_router)
 
@@ -103,6 +107,10 @@ for i in range(num_of_left_nodes):
     # Assigning addresses to the interfaces
     node_int.set_address(left_subnet.get_next_addr())
     router_int.set_address(left_subnet.get_next_addr())
+
+# Assigning addresses to the connection to be used for ssh
+client_ssh_connection.set_address(left_subnet.get_next_addr())
+router_ssh_connection.set_address(left_subnet.get_next_addr())
 
 # This subnet is used for all the right-nodes and the right-router
 right_subnet = Subnet("10.0.1.0/24")
@@ -131,12 +139,18 @@ print("Addresses are assigned")
 for i in range(num_of_left_nodes):
     left_nodes[i].add_route("DEFAULT", left_node_connections[i][0])
 
+# Send the packet through 'client_ssh_connection' interface for ssh
+left_nodes[0].add_route(router_ssh_connection.get_address(), client_ssh_connection)
+
 # If the destination address for any packet in left-router is
 # one of the left-nodes, forward the packet to that node
 for i in range(num_of_left_nodes):
     left_router.add_route(
         left_node_connections[i][0].get_address(), left_node_connections[i][1]
     )
+
+# Send the packet through 'router_ssh_connection' interface for ssh
+left_router.add_route(client_ssh_connection.get_address(), router_ssh_connection)
 
 # If the destination address doesn't match any of the entries
 # in the left-router's iptables forward the packet to right-router
@@ -183,16 +197,7 @@ for i in range(num_of_right_nodes):
 left_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM)
 right_router_connection.set_attributes(bottleneck_bandwidth, router_router_latency, AQM)
 
-
-# subprocess.exec("sudo -u ${SUDO_USER} ssh-keygen -q -t rsa -f /home/${SUDO_USER}/.ssh/id_rsa -N "" > /dev/null")
-# 	cat /home/${SUDO_USER}/.ssh/authorized_keys 2> /dev/null | grep "$(cat /home/${SUDO_USER}/.ssh/id_rsa.pub)" > /dev/null
-
-# if id_rsa != authorized_keys
-#     sudo -u ${SUDO_USER} bash -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
-
-# for each of left_node:
-#     exec(ip netns left+node 	ip netns exec client sudo -u ${SUDO_USER} bash -c "ssh-keyscan -4 -t rsa left_router >> ~/.ssh/known_hosts > /dev/null"
-# )
+subprocess.run(f"./enable_passwordless_ssh.sh {left_nodes[0].id} {left_router.id} {router_ssh_connection.address.get_addr(with_subnet=False)}", check=True, shell=True)
 
 
 FLENT_TEST_NAME = "tcp_nup"
@@ -210,9 +215,21 @@ for i in range(TOTAL_NODES_PER_SIDE):
     src_node = left_nodes[i]
     node_dir = f"{artifacts_dir}/{src_node.name}"
     os.mkdir(node_dir)
+    os.chmod(node_dir, 0o777)
 
-    cmd = f"""
+    # listen to the router qdisc stats only if it is the first client
+    if i==0:
+        cmd = f"""
+        ip netns exec {src_node.id} sudo -u {os.environ['SUDO_USER']} flent {FLENT_TEST_NAME} \
+        --test-parameter qdisc_stats_hosts={router_ssh_connection.address.get_addr(with_subnet=False)} \
+        --test-parameter qdisc_stats_interfaces={left_router_connection.id} \
+        """
+    else:
+        cmd = f"""
         ip netns exec {src_node.id} flent {FLENT_TEST_NAME} \
+        """
+
+    cmd += f"""
         --test-parameter upload_streams=1 \
         --socket-stats \
         --length {TEST_DURATION} \
