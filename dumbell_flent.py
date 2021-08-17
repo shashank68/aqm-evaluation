@@ -33,7 +33,6 @@ BW_UNIT = "gbit"
 
 AQM = "fq_codel"  # set Router egress interface
 
-CONG_ALGO = "cubic"  # Client side
 ECN = False
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
@@ -41,11 +40,12 @@ TOTAL_NODES_PER_SIDE = 1  # Number of clients
 DEBUG_LOGS = True
 FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup
 
-TEST_DURATION = 40
+TEST_DURATION = 30
+STEP_SIZE = 0.05 # Resolution in seconds
 UPLOAD_STREAMS = 1
 
-OFFLOADS = True     # GSO, GRO
-NIC_BUFFER = ""     # TX
+OFFLOADS = True  # GSO, GRO
+NIC_BUFFER = ""  # TX
 
 ###############################
 
@@ -208,7 +208,9 @@ right_router_connection.set_attributes(
     bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs
 )
 
-artifacts_dir = FLENT_TEST_NAME + time.strftime("%d-%m_%H:%M:%S.dump")
+title = "ECN_" if ECN else ""
+title += AQM
+artifacts_dir = title + FLENT_TEST_NAME + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
 workers_list = []
 
@@ -254,12 +256,15 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     cmd += f"""
         --socket-stats \
+        --step-size={STEP_SIZE} \
         --test-parameter upload_streams={UPLOAD_STREAMS} \
         --length {TEST_DURATION} \
         --host {right_node_connections[i][0].address.get_addr(with_subnet=False)} \
         --output {node_dir}/output.txt \
-        --data-dir {node_dir} 
+        --data-dir {node_dir} \
+        --title-extra {title} 
         """
+
     if DEBUG_LOGS:
         cmd += f"--log-file {node_dir}/debug.log"
 
