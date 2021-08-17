@@ -1,12 +1,11 @@
 import os
-import time
 import subprocess
+import time
+from multiprocessing import Process
 
+from nest.engine.exec import exec_subprocess
 from nest.experiment import *
 from nest.topology import *
-from nest.engine.exec import exec_subprocess
-
-from multiprocessing import Process
 
 ##############################
 # Topology: Dumbbell
@@ -24,16 +23,31 @@ from multiprocessing import Process
 #
 ##############################
 
+
+####### CONFIGURATION ###########
+
 TOTAL_LATENCY = 4  # Total Round trip latency
-BOTTLENECK_BANDWIDTH = 1
+
+BOTTLENECK_BANDWIDTH = 1  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 BW_UNIT = "gbit"
 
-AQM = "fq_codel"
-CONG_ALGO = "cubic"
+AQM = "fq_codel"  # set Router egress interface
 
+CONG_ALGO = "cubic"  # Client side
 ECN = False
 
-TOTAL_NODES_PER_SIDE = 1
+TOTAL_NODES_PER_SIDE = 1  # Number of clients
+
+DEBUG_LOGS = True
+FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup
+
+TEST_DURATION = 40
+UPLOAD_STREAMS = 1
+
+OFFLOADS = True     # GSO, GRO
+NIC_BUFFER = ""     # TX
+
+###############################
 
 client_router_latency = TOTAL_LATENCY / 8
 router_router_latency = TOTAL_LATENCY / 4
@@ -194,14 +208,6 @@ right_router_connection.set_attributes(
     bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs
 )
 
-DEBUG_LOGS = True
-FLENT_TEST_NAME = "tcp_nup"
-TEST_DURATION = 40
-UPLOAD_STREAMS = 1
-OFFLOADS = True
-NIC_BUFFER = ""
-
-
 artifacts_dir = FLENT_TEST_NAME + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
 workers_list = []
@@ -238,8 +244,8 @@ for i in range(TOTAL_NODES_PER_SIDE):
     if i == 0:
         cmd = f"""
         ip netns exec {src_node.id} flent {FLENT_TEST_NAME} \
-        --test-parameter qdisc_stats_hosts={left_router.id},{right_router.id} \
-        --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id},{right_router_connection.ifb.id} \
+        --test-parameter qdisc_stats_hosts={left_router.id} \
+        --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id} \
         """
     else:
         cmd = f"""
@@ -256,7 +262,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         """
     if DEBUG_LOGS:
         cmd += f"--log-file {node_dir}/debug.log"
-    print(cmd)
+
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
 for worker in workers_list:
@@ -265,4 +271,4 @@ for worker in workers_list:
 for worker in workers_list:
     worker.join()
 
-print("FINISHED EXECUTION")
+print("\n🎉 FINISHED EXECUTION 🎉\n")
