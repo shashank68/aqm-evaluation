@@ -25,7 +25,8 @@ from multiprocessing import Process
 ##############################
 
 TOTAL_LATENCY = 4  # Total Round trip latency
-BOTTLENECK_BANDWIDTH = 80
+BOTTLENECK_BANDWIDTH = 1
+BW_UNIT = "gbit"
 
 AQM = "fq_codel"
 CONG_ALGO = "cubic"
@@ -41,8 +42,8 @@ client_router_latency = str(client_router_latency) + "ms"
 router_router_latency = str(router_router_latency) + "ms"
 
 
-client_router_bandwidth = str(BOTTLENECK_BANDWIDTH * 100) + "mbit"
-bottleneck_bandwidth = str(BOTTLENECK_BANDWIDTH) + "mbit"
+client_router_bandwidth = str(BOTTLENECK_BANDWIDTH * 10) + BW_UNIT
+bottleneck_bandwidth = str(BOTTLENECK_BANDWIDTH) + BW_UNIT
 
 # Assigning number of nodes on either sides of the dumbbell according to input
 num_of_left_nodes = TOTAL_NODES_PER_SIDE
@@ -238,7 +239,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         cmd = f"""
         ip netns exec {src_node.id} flent {FLENT_TEST_NAME} \
         --test-parameter qdisc_stats_hosts={left_router.id},{right_router.id} \
-        --test-parameter qdisc_stats_interfaces={left_router_connection.id},{right_router_connection.id} \
+        --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id},{right_router_connection.ifb.id} \
         """
     else:
         cmd = f"""
@@ -255,6 +256,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         """
     if DEBUG_LOGS:
         cmd += f"--log-file {node_dir}/debug.log"
+    print(cmd)
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
 for worker in workers_list:
