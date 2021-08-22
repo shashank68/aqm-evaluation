@@ -28,8 +28,7 @@ from nest.topology import *
 
 TOTAL_LATENCY = 4  # Total Round trip latency
 
-BOTTLENECK_BANDWIDTH = 1  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
-BW_UNIT = "gbit"
+BOTTLENECK_BANDWIDTH, BW_UNIT = (100, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
 AQM = "fq_codel"  # set Router egress interface
 
