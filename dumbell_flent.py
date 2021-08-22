@@ -30,14 +30,16 @@ TOTAL_LATENCY = 4  # Total Round trip latency
 
 BOTTLENECK_BANDWIDTH, BW_UNIT = (100, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
-AQM = "fq_codel"  # set Router egress interface
+AQM = "fq_pie"  # set at router egress interface
 
 ECN = False
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
 DEBUG_LOGS = True
-FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup
+FLENT_TEST_NAME = "tcp_1up"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
+TCP_CONG_CONTROL = "cubic"
+
 
 TEST_DURATION = 30
 STEP_SIZE = 0.05 # Resolution in seconds
@@ -208,8 +210,8 @@ right_router_connection.set_attributes(
 )
 
 title = "ECN_" if ECN else ""
-title += AQM
-artifacts_dir = title + FLENT_TEST_NAME + time.strftime("%d-%m_%H:%M:%S.dump")
+title += AQM + "_" + FLENT_TEST_NAME
+artifacts_dir = title + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
 workers_list = []
 
@@ -257,6 +259,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         --socket-stats \
         --step-size={STEP_SIZE} \
         --test-parameter upload_streams={UPLOAD_STREAMS} \
+        --test-parameter tcp_cong_control={TCP_CONG_CONTROL} \
         --length {TEST_DURATION} \
         --host {right_node_connections[i][0].address.get_addr(with_subnet=False)} \
         --output {node_dir}/output.txt \
@@ -268,6 +271,9 @@ for i in range(TOTAL_NODES_PER_SIDE):
         cmd += f"--log-file {node_dir}/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
+
+print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
+
 
 for worker in workers_list:
     worker.start()
