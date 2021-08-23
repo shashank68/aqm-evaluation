@@ -27,7 +27,7 @@ from nest.topology import *
 
 ####### CONFIGURATION ###########
 
-TOTAL_LATENCY = 4  # Total Round trip latency
+(TOTAL_LATENCY, LAT_UNIT) = (100, "ms")  # Total Round trip latency
 
 BOTTLENECK_BANDWIDTH, BW_UNIT = (100, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
@@ -54,8 +54,8 @@ NIC_BUFFER = ""  # TX
 client_router_latency = TOTAL_LATENCY / 8
 router_router_latency = TOTAL_LATENCY / 4
 
-client_router_latency = str(client_router_latency) + "ms"
-router_router_latency = str(router_router_latency) + "ms"
+client_router_latency = str(client_router_latency) + LAT_UNIT
+router_router_latency = str(router_router_latency) + LAT_UNIT
 
 
 client_router_bandwidth = str(BOTTLENECK_BANDWIDTH * 10) + BW_UNIT

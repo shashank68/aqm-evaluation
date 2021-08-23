@@ -1,0 +1,20 @@
+--- /usr/share/flent/flent/runners.py	2021-08-23 22:38:54.772700416 +0530
++++ runners.py	2021-08-23 22:38:16.098127520 +0530
+@@ -2019,6 +2019,17 @@
+                    r"dropped (?P<dropped_pie>\d+) "
+                    r"maxq (?P<maxq>\d+) "
+                    r"ecn_mark (?P<ecn_mark>\d+)"),
++        
++        # fq_pie
++        re.compile(r"pkts_in (?P<pkts_in>\d+) "
++                   r"overlimit (?P<overlimit>\d+) "
++                   r"overmemory (?P<overmemory>\d+) "
++                   r"dropped (?P<dropped>\d+) "
++                   r"ecn_mark (?P<ecn_mark>\d+)"),
++        re.compile(r"new_flow_count (?P<new_flow_count>\d+) "
++                   r"new_flows_len (?P<new_flows_len>\d+) "
++                   r"old_flows_len (?P<old_flows_len>\d+) "
++                   r"memory_used (?P<memory_used>\d+)"),
+     ]
+ 
+     cake_tin_re = r"(Tin \d|Bulk|Best Effort|Video|Voice)"
