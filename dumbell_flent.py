@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 from multiprocessing import Process
+from shutil import copy2
 
 from nest.engine.exec import exec_subprocess
 from nest.experiment import *
@@ -199,7 +200,7 @@ for i in range(num_of_right_nodes):
         client_router_bandwidth, client_router_latency, **qdisc_kwargs
     )
 
-
+print("Setting Router connection attributes")
 # Setting up the attributes of the connections between
 # the two routers
 left_router_connection.set_attributes(
@@ -213,6 +214,8 @@ title = "ECN_" if ECN else ""
 title += AQM + "_" + FLENT_TEST_NAME
 artifacts_dir = title + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
+copy2(os.path.abspath(__file__), artifacts_dir)
+
 workers_list = []
 
 for i in range(TOTAL_NODES_PER_SIDE):
