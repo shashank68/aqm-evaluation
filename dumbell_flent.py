@@ -27,18 +27,18 @@ import argparse
 
 ####### CONFIGURATION ###########
 
-(TOTAL_LATENCY, LAT_UNIT) = (100, "ms")  # Total Round trip latency
+(TOTAL_LATENCY, LAT_UNIT) = (4, "ms")  # Total Round trip latency
 
 BOTTLENECK_BANDWIDTH, BW_UNIT = (80, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
-AQM = "fq_codel"  # set at router egress interface
+AQM = "fq_pie"  # set at router egress interface
 
-ECN = False
+ECN = True
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
 DEBUG_LOGS = True
-FLENT_TEST_NAME = "tcp_1up"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
+FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 TCP_CONG_CONTROL = "cubic"
 
 TEST_DURATION = 30
@@ -80,7 +80,7 @@ if args.offloads is not None:
 
 title = "ECN_" if ECN else ""
 title += "OFL_" if OFFLOADS else ""
-title += AQM + "_" + str(BOTTLENECK_BANDWIDTH) + 'mbit_' + str(TOTAL_LATENCY) + 'ms_' + TCP_CONG_CONTROL + "_"
+title += AQM + "_" + str(BOTTLENECK_BANDWIDTH) + BW_UNIT + '_' + str(TOTAL_LATENCY) + LAT_UNIT + '_' + TCP_CONG_CONTROL + "_"
 ###############################
 
 client_router_latency = TOTAL_LATENCY / 8

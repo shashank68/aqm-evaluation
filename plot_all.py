@@ -12,7 +12,7 @@ for TOTAL_LATENCY in [4, 40, 80, 800]:
                         process = subprocess.run([
                             f"sudo",
                             f"-S",
-                            f"python3", # Change the python path here if you use a virtual environment
+                            f"/home/aditya/Documents/VII_Sem/MajorProject/majproj_tests/bin/python", # Change the python path here if you use a virtual environment
                             f"dumbell_flent.py",
                             f"--rtt={TOTAL_LATENCY}",
                             f"--bottleneck_bw={BOTTLENECK_BANDWIDTH}",
