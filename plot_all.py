@@ -8,7 +8,6 @@ for TOTAL_LATENCY in [4, 40, 80, 800]:
             for TCP_CONG_CONTROL in ["cubic", "reno"]:
                 for ECN in ["No", "Yes"]:
                     for OFFLOADS in ["No", "Yes"]:
-                        # process = subprocess.run("pwd")
                         print(".")
                         process = subprocess.run([
                             f"sudo",

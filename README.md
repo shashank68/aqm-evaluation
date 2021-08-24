@@ -30,6 +30,13 @@ git clone https://github.com/shashank68/flent-aqm-tests
 sudo python3 dumbell_flent.py
 ```
 
+
+- Use the following optional command line arguments 
+```bash
+sudo python3 dumbell_flent.py --rtt=100 --bottleneck_bw=80 --AQM=fq_codel --cong_control_algo=cubic --ecn=No --offloads=Yes
+```
+- If an argument is not specified the value in the script is used
+
 ## Notes
 - `FQ_PIE` AQM support in **iproute2** was added from _version 5.5_.
 - To install iproute2 with fq_pie support (e.g: v5.7)
@@ -51,3 +58,10 @@ sudo cp tc_iterate.sh /usr/share/flent/flent/scripts/
 ```
 
 - The flent data file will be generated in a directory for each node.
+
+\
+To plot all graphs run:
+```bash
+python3 plot_all.py
+```
+- You may need to change the python path in this script if you use a virtual environment or anaconda
