@@ -5,8 +5,8 @@ from multiprocessing import Process
 from shutil import copy2
 
 from nest.engine.exec import exec_subprocess
-from nest.experiment import *
 from nest.topology import *
+import argparse
 
 ##############################
 # Topology: Dumbbell
@@ -29,9 +29,9 @@ from nest.topology import *
 
 (TOTAL_LATENCY, LAT_UNIT) = (100, "ms")  # Total Round trip latency
 
-BOTTLENECK_BANDWIDTH, BW_UNIT = (100, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
+BOTTLENECK_BANDWIDTH, BW_UNIT = (80, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
-AQM = "fq_pie"  # set at router egress interface
+AQM = "fq_codel"  # set at router egress interface
 
 ECN = False
 
@@ -41,14 +41,46 @@ DEBUG_LOGS = True
 FLENT_TEST_NAME = "tcp_1up"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 TCP_CONG_CONTROL = "cubic"
 
-
 TEST_DURATION = 30
-STEP_SIZE = 0.05 # Resolution in seconds
+STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
 
 OFFLOADS = True  # GSO, GRO
 NIC_BUFFER = ""  # TX
 
+# Adding CL arguments functionality
+# If no arguments are added then the ones in this script are used
+parser = argparse.ArgumentParser()
+parser.add_argument("--rtt", type=int, help="Enter the RTT")
+parser.add_argument("--bottleneck_bw", type=int, help="Enter the bottleneck bandwidth")
+parser.add_argument("--AQM", type=str, help="Enter the AQM algorithm")
+parser.add_argument("--cong_control_algo", type=str, help="Enter the congestion control algorithm")
+parser.add_argument("--ecn", type=str, help="Set the ecn flag")
+parser.add_argument("--offloads", type=str, help="Set the offloads flag")
+
+args = parser.parse_args()
+
+if args.rtt is not None:
+    TOTAL_LATENCY = args.rtt
+
+if args.bottleneck_bw is not None:
+    BOTTLENECK_BANDWIDTH = args.bottleneck_bw
+
+if args.AQM is not None:
+    AQM = args.AQM
+
+if args.cong_control_algo is not None:
+    TCP_CONG_CONTROL = args.cong_control_algo
+
+if args.ecn is not None:
+    ECN = True if args.ecn == "Yes" else False
+
+if args.offloads is not None:
+    OFFLOADS = True if args.offloads == "Yes" else False
+
+title = "ECN_" if ECN else ""
+title += "OFL_" if OFFLOADS else ""
+title += AQM + "_" + str(BOTTLENECK_BANDWIDTH) + 'mbit_' + str(TOTAL_LATENCY) + 'ms_' + TCP_CONG_CONTROL + "_"
 ###############################
 
 client_router_latency = TOTAL_LATENCY / 8
@@ -210,8 +242,6 @@ right_router_connection.set_attributes(
     bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs
 )
 
-title = "ECN_" if ECN else ""
-title += AQM + "_" + FLENT_TEST_NAME
 artifacts_dir = title + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
 copy2(os.path.abspath(__file__), artifacts_dir)
@@ -276,7 +306,6 @@ for i in range(TOTAL_NODES_PER_SIDE):
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
 print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
-
 
 for worker in workers_list:
     worker.start()
