@@ -3,6 +3,8 @@ import subprocess
 import time
 from multiprocessing import Process
 from shutil import copy2
+import matplotlib.pyplot as plt
+import re
 
 from nest.engine.exec import exec_subprocess
 from nest.topology import *
@@ -247,6 +249,8 @@ os.mkdir(artifacts_dir)
 copy2(os.path.abspath(__file__), artifacts_dir)
 
 workers_list = []
+tcpdump_processes = []
+tcpdump_output_files = []
 
 for i in range(TOTAL_NODES_PER_SIDE):
     cmd = f"ip netns exec {right_nodes[i].id} netserver"
@@ -275,6 +279,9 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     node_dir = f"{artifacts_dir}/{src_node.name}"
     os.mkdir(node_dir)
+
+    tcpdump_output_file = f"{node_dir}/tcpdump.out"
+    tcpdump_output_files.append(tcpdump_output_file)
 
     # listen to the router qdisc stats only if it is the first client
     if i == 0:
@@ -305,12 +312,70 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
+    # run tcpdump on all the right nodes to analyse packets and compute link utilization
+    # the output is stored in different files for different nodes
+    tcpdump_processes.append(subprocess.Popen(
+        f"""ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt""",
+        stdout=open(tcpdump_output_file, "w"), stderr=subprocess.DEVNULL, shell=True))
+
 print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
 
 for worker in workers_list:
     worker.start()
 
-for worker in workers_list:
-    worker.join()
+for i in range(TOTAL_NODES_PER_SIDE):
+    workers_list[i].join()
+    tcpdump_processes[i].terminate()
 
-print("\n🎉 FINISHED EXECUTION 🎉\n")
+print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
+
+
+####### LINK UTILISATION COMPUTATION #######
+
+packets = []
+for tcpdump_output_file in tcpdump_output_files:
+    f = open(tcpdump_output_file, "r")
+    output = f.read()
+
+    # get the timestamp and packet size of each of the packets
+    timestamps = list(
+        map(lambda x: float(x), re.findall("^\d*\.\d*", output, re.M)))
+    packet_sizes = list(
+        map(lambda x: int(x.split(" ")[1][:-1]), re.findall("length [\d]*:", output)))
+
+    for i in range(len(timestamps)):
+        packets.append((timestamps[i], packet_sizes[i]))
+
+# sort the packets received by different nodes according to the timestamp
+packets.sort()
+
+curr_timestamp = packets[0][0]
+curr_packet_size_sum = packets[0][1]
+time_datapoints = []
+curr_time_datapoint = 0
+throughput_datapoints = []
+
+for packet in packets:
+    # if the packet belongs to a different bucket than the previous one, append
+    # the stats to a new datapoint and create a new bucket
+    if(packet[0]-curr_timestamp > STEP_SIZE):
+        time_datapoints.append(curr_time_datapoint)
+        throughput_datapoints.append(
+            curr_packet_size_sum*8*100/(BOTTLENECK_BANDWIDTH*1000000*STEP_SIZE))
+        curr_timestamp = packet[0]
+        curr_packet_size_sum = packet[1]
+        curr_time_datapoint += STEP_SIZE
+
+    # else add the stats to the current datapoint
+    else:
+        curr_packet_size_sum += packet[1]
+
+time_datapoints.append(curr_time_datapoint)
+throughput_datapoints.append(
+    curr_packet_size_sum*8*100/(BOTTLENECK_BANDWIDTH*1000000*STEP_SIZE))
+
+# Plot the points on a graph and save the graph as an image
+plt.xlabel("Time (seconds)")
+plt.ylabel("Link Utilization (Percentage)")
+plt.plot(time_datapoints, throughput_datapoints)
+plt.savefig(f"{artifacts_dir}/link_utilization.png")
