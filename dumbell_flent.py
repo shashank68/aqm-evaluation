@@ -37,6 +37,8 @@ AQM = "fq_pie"  # set at router egress interface
 
 ECN = True
 
+SET_TARGET = False
+
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
 DEBUG_LOGS = True
@@ -59,6 +61,8 @@ parser.add_argument("--AQM", type=str, help="Enter the AQM algorithm")
 parser.add_argument("--cong_control_algo", type=str, help="Enter the congestion control algorithm")
 parser.add_argument("--ecn", type=str, help="Set the ecn flag")
 parser.add_argument("--offloads", type=str, help="Set the offloads flag")
+parser.add_argument("--number_of_flows", type=str, help="Set the number of flows")
+parser.add_argument("--target", type=str, help="Set the target")
 
 args = parser.parse_args()
 
@@ -80,7 +84,15 @@ if args.ecn is not None:
 if args.offloads is not None:
     OFFLOADS = True if args.offloads == "Yes" else False
 
-title = "ECN_" if ECN else ""
+if args.number_of_flows is not None:
+    TOTAL_NODES_PER_SIDE = args.number_of_flows
+
+if args.target is not None:
+    SET_TARGET = True
+    TARGET = args.target
+
+title = str(TOTAL_NODES_PER_SIDE) + "_"
+title += "ECN_" if ECN else ""
 title += "OFL_" if OFFLOADS else ""
 title += AQM + "_" + str(BOTTLENECK_BANDWIDTH) + BW_UNIT + '_' + str(TOTAL_LATENCY) + LAT_UNIT + '_' + TCP_CONG_CONTROL + "_"
 ###############################
@@ -213,6 +225,9 @@ qdisc_kwargs = {}
 
 if ECN:
     qdisc_kwargs = {"ecn": ""}
+
+if SET_TARGET:
+    qdisc_kwargs["target"] = f"{TARGET}ms"
 
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
