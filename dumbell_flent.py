@@ -61,8 +61,8 @@ parser.add_argument("--AQM", type=str, help="Enter the AQM algorithm")
 parser.add_argument("--cong_control_algo", type=str, help="Enter the congestion control algorithm")
 parser.add_argument("--ecn", type=str, help="Set the ecn flag")
 parser.add_argument("--offloads", type=str, help="Set the offloads flag")
-parser.add_argument("--number_of_flows", type=str, help="Set the number of flows")
-parser.add_argument("--target", type=str, help="Set the target")
+parser.add_argument("--number_of_flows", type=int, help="Set the number of flows")
+parser.add_argument("--target", type=int, help="Set the target")
 
 args = parser.parse_args()
 
