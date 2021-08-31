@@ -70,4 +70,4 @@ python3 plot_all.py
 
 - Get the kernel source
 - Modify the code
-- Run ```load_pies.sh``` in the kernel source root directory
+- Run ```sudo load_pies.sh``` in the kernel source root directory
