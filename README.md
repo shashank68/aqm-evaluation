@@ -59,9 +59,15 @@ sudo cp tc_iterate.sh /usr/share/flent/flent/scripts/
 
 - The flent data file will be generated in a directory for each node.
 
-\
 To plot all graphs run:
 ```bash
 python3 plot_all.py
 ```
 - You may need to change the python path in this script if you use a virtual environment or anaconda
+
+
+## Changing pie vars in kernel (For e.g: `burst_time` in `include/net/pie.h`)
+
+- Get the kernel source
+- Modify the code
+- Run ```load_pies.sh``` in the kernel source root directory
