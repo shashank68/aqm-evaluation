@@ -358,7 +358,7 @@ for tcpdump_output_file in tcpdump_output_files:
     packet_sizes = list(
         map(lambda x: int(x.split(" ")[1][:-1]), re.findall("length [\d]*:", output)))
 
-    for i in range(len(timestamps)):
+    for i in range(len(packet_sizes)):
         packets.append((timestamps[i], packet_sizes[i]))
 
 # sort the packets received by different nodes according to the timestamp
