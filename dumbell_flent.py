@@ -85,13 +85,13 @@ if args.offloads is not None:
     OFFLOADS = True if args.offloads == "Yes" else False
 
 if args.number_of_flows is not None:
-    TOTAL_NODES_PER_SIDE = args.number_of_flows
+    UPLOAD_STREAMS = args.number_of_flows
 
 if args.target is not None:
     SET_TARGET = True
     TARGET = args.target
 
-title = str(TOTAL_NODES_PER_SIDE) + "_"
+title = str(UPLOAD_STREAMS) + "_"
 title += "ECN_" if ECN else ""
 title += "OFL_" if OFFLOADS else ""
 title += AQM + "_" + str(BOTTLENECK_BANDWIDTH) + BW_UNIT + '_' + str(TOTAL_LATENCY) + LAT_UNIT + '_' + TCP_CONG_CONTROL + "_"
