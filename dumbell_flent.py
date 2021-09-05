@@ -223,11 +223,22 @@ right_router.add_route("DEFAULT", right_router_connection)
 
 qdisc_kwargs = {}
 
-if ECN:
-    qdisc_kwargs = {"ecn": ""}
+if AQM == "fq_pie" or AQM == "fq_codel":
+    if ECN:
+        qdisc_kwargs = {"ecn": ""}
 
-if SET_TARGET:
-    qdisc_kwargs["target"] = f"{TARGET}ms"
+    if SET_TARGET:
+        qdisc_kwargs["target"] = f"{TARGET}ms"
+
+if AQM == "cake":
+    # configure cake parameters to run COBALT
+    qdisc_kwargs["unlimited"] = ""
+    qdisc_kwargs["raw"] = ""
+    qdisc_kwargs["besteffort"] = ""
+    qdisc_kwargs["flowblind"] = ""
+    qdisc_kwargs["no-ack-filter"] = ""
+    qdisc_kwargs["rtt"] = str(TOTAL_LATENCY) + LAT_UNIT
+
 
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
