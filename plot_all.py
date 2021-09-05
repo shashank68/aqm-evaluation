@@ -4,8 +4,8 @@ import subprocess
 
 for TOTAL_LATENCY in [4, 40, 80, 800]:
     for BOTTLENECK_BANDWIDTH in [80, 160, 1000]:
-        for AQM in ["fq_codel", "fq_pie"]:
-            for TCP_CONG_CONTROL in ["cubic", "reno", "cake"]:
+        for AQM in ["fq_codel", "fq_pie", "cake"]:
+            for TCP_CONG_CONTROL in ["cubic", "reno"]:
                 for ECN in ["No", "Yes"]:
                     for OFFLOADS in ["No", "Yes"]:
                         for UPLOAD_STREAMS in [1, 3, 16]:
