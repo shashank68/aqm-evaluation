@@ -45,7 +45,6 @@ title = f"{AQM}_{UPLOAD_STREAMS}_{BOTTLENECK_BANDWIDTH}_{TOTAL_LATENCY}"
 title += "_ECN" if ECN else ""
 title += "_OFFLD" if OFFLOADS else ""
 
-print(title)
 ###############################
 
 client_router_latency = TOTAL_LATENCY / 16
@@ -241,10 +240,10 @@ for i in range(TOTAL_NODES_PER_SIDE):
         src_node.configure_tcp_param("ecn", 1)
         dest_node.configure_tcp_param("ecn", 1)
 
-    node_dir = f"{artifacts_dir}/{src_node.name}"
-    os.mkdir(node_dir)
+    # node_dir = f"{artifacts_dir}/{src_node.name}"
+    # os.mkdir(node_dir)
 
-    tcpdump_output_file = f"{node_dir}/tcpdump.out"
+    tcpdump_output_file = f"{artifacts_dir}/tcpdump.out"
     tcpdump_output_files.append(tcpdump_output_file)
 
     # listen to the router qdisc stats only if it is the first client
@@ -263,16 +262,15 @@ for i in range(TOTAL_NODES_PER_SIDE):
         --socket-stats \
         --step-size={STEP_SIZE} \
         --test-parameter upload_streams={UPLOAD_STREAMS} \
-        --test-parameter tcp_cong_control={TCP_CONG_CONTROL} \
         --length {TEST_DURATION} \
         --host {right_node_connections[i][0].address.get_addr(with_subnet=False)} \
-        --output {node_dir}/output.txt \
-        --data-dir {node_dir} \
+        --output {artifacts_dir}/output.txt \
+        --data-dir {artifacts_dir} \
         --title-extra {title} 
         """
 
     if DEBUG_LOGS:
-        cmd += f"--log-file {node_dir}/debug.log"
+        cmd += f"--log-file {artifacts_dir}/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
@@ -288,7 +286,6 @@ for i in range(TOTAL_NODES_PER_SIDE):
     )
 
 print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
-
 for worker in workers_list:
     worker.start()
 
@@ -297,7 +294,6 @@ for i in range(TOTAL_NODES_PER_SIDE):
     tcpdump_processes[i].terminate()
 
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
-
 
 ####### LINK UTILISATION COMPUTATION #######
 

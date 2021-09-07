@@ -17,3 +17,8 @@ sudo patch /usr/share/flent/flent/runners.py < misc_patch_scripts/flent_runners_
 ```bash
 sudo cp misc_patch_scripts/tc_iterate.sh /usr/share/flent/flent/scripts/
 ```
+
+- To speed up Flent execution, use the provided ss_iterate.sh script
+```bash
+sudo cp misc_patch_scripts/ss_iterate.sh /usr/share/flent/flent/scripts/
+```
