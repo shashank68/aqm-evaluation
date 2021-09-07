@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <title>Flent file locator</title>
+</head>
+
+<body>
+    <div class="container" id="main">
+        <div class="py-5 row">
+            <div class="col-lg-7">
+                <form id="mainform"></form>
+            </div>
+        </div>
+    </div>
+    <script>
+        var cmd_start = "flent-gui ~/MP/flent-aqm-tests/";
+        var params = {};
+        params["qdisc"] = ["Qdisc", "fq_codel", "fq_pie", "cake"];
+        params["flows"] = ["Number of flows", 1, 4, 16];
+        params["bandwidth"] = ["Bottleneck bandwidth (mbit)", 80, 800, 1000];
+        params["rtt"] = ["RTT of flow (ms)", 4, 80, 800, 1000];
+        params["ecn"] = ["ECN"]
+        params["offloads"] = ["OFFLD"]
+
+        function handleInputChange() {
+            var cmd = cmd_start;
+            for (prm in params) {
+                var elem = document.querySelector("input[name=" + prm + "]:checked");
+                if (elem) cmd += elem.value + "_";
+            }
+            cmd = cmd.slice(0, -1);
+            cmd += "*/*.gz";
+            document.getElementById("cmdtxt").value = cmd;
+        }
+
+        function copyText() {
+            txtbox = document.getElementById("cmdtxt");
+            txtbox.select();
+            document.execCommand("copy");
+        }
+
+        for (prm in params) {
+            var grp = document.createElement('div');
+            grp.classList = ["input-group"];
+            grp.id = prm;
+            for (let i = 1; i < params[prm].length; i++) {
+                var inp = document.createElement('input');
+                inp.className = "form-check-input";
+                inp.type = "radio";
+                inp.name = prm;
+                inp.oninput = handleInputChange;
+                inp.id = prm + String(i);
+                inp.value = params[prm][i];
+                if (i == 1) inp.checked = true;
+
+                var labl = document.createElement('label');
+                labl.setAttribute("for", inp.id);
+                labl.innerText = String(params[prm][i]);
+                labl.className = "form-check-label";
+
+                var inp_div = document.createElement('div');
+                inp_div.classList = "form-check form-check-inline";
+
+                inp_div.appendChild(inp);
+                inp_div.appendChild(labl);
+                grp.appendChild(inp_div);
+            }
+            if (params[prm].length == 1) {
+                var inp = document.createElement('input');
+                inp.className = "form-check-input";
+                inp.type = "checkbox";
+                inp.name = prm;
+                inp.oninput = handleInputChange;
+                inp.value = params[prm][0];
+                inp.checked = true;
+
+                var inp_div = document.createElement('div');
+                inp_div.classList = "form-check form-switch";
+                inp_div.appendChild(inp);
+                grp.appendChild(inp_div);
+            }
+            var labl = document.createElement('h4');
+            labl.innerText = params[prm][0];
+            labl.className = "mb-2";
+            var horline = document.createElement('hr');
+            horline.className = "mb-3";
+            document.getElementById("mainform").appendChild(labl);
+            document.getElementById("mainform").appendChild(grp);
+            document.getElementById("mainform").appendChild(horline);
+        }
+        var txtbox = document.createElement("input");
+        txtbox.classList = "form-control text-center";
+        txtbox.type = "text";
+        txtbox.readOnly = true;
+        txtbox.id = "cmdtxt";
+        txtbox.setAttribute("data-toggle", "tooltip");
+        txtbox.title = "Click to Copy";
+        txtbox.onclick = copyText;
+
+        var pre = document.createElement("pre");
+        pre.classList = "language-bash";
+        pre.appendChild(txtbox);
+        document.getElementById("mainform").appendChild(pre);
+        handleInputChange();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+        crossorigin="anonymous"></script>
+
+</body>
+
+</html>
