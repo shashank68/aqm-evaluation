@@ -48,13 +48,13 @@ sudo apt install ./iproute2_5.7.0-1ubuntu1_amd64.deb
 
 - Apply the given patch to parse fq_pie qdisc stats in flent
 ```bash
-sudo patch /usr/share/flent/flent/runners.py < flent_runners_fq_pie.diff
+sudo patch /usr/share/flent/flent/runners.py < misc_patch_scripts/flent_runners_fq_pie.diff
 ```
 
 - To use `qdisc_stats_interfaces` test parameter, Run the below command once:
 
 ```bash
-sudo cp tc_iterate.sh /usr/share/flent/flent/scripts/
+sudo cp misc_patch_scripts/tc_iterate.sh /usr/share/flent/flent/scripts/
 ```
 
 - The flent data file will be generated in a directory for each node.
@@ -64,10 +64,3 @@ To plot all graphs run:
 python3 plot_all.py
 ```
 - You may need to change the python path in this script if you use a virtual environment or anaconda
-
-
-## Changing pie vars in kernel (For e.g: `burst_time` in `include/net/pie.h`)
-
-- Get the kernel source
-- Modify the code
-- Run ```sudo load_pies.sh``` in the kernel source root directory
