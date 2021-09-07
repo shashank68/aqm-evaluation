@@ -1,3 +1,4 @@
 *.log
 *.flent.gz
 *.dump/
+__pycache__/

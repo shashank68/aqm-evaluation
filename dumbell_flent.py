@@ -1,68 +1,37 @@
+import argparse
 import os
+import re
 import subprocess
 import time
 from multiprocessing import Process
-from shutil import copy2
+
 import matplotlib.pyplot as plt
-import re
-
-from nest.engine.exec import exec_subprocess
+from nest.engine.exec import exec_exp_commands, exec_subprocess
 from nest.topology import *
-import argparse
 
-##############################
-# Topology: Dumbbell
-#
-#   ln0----------------                      ---------------rn0
-#                      \                    /
-#   ln1---------------  \                  /  ---------------rn1
-#                      \ \                / /
-#   ln2---------------- lr ------------- rr ---------------- rn2
-#   .                  /                    \                .
-#   .                 /                      \               .
-#   .                /                        \              .
-#   .               /                          \             .
-#   ln6------------                              ------------rn6
-#
-##############################
-
+from exp_config import *
 
 ####### CONFIGURATION ###########
 
-(TOTAL_LATENCY, LAT_UNIT) = (80, "ms")  # Total Round trip latency
-
-BOTTLENECK_BANDWIDTH, BW_UNIT = (80, "mbit")  # Client to router Bandwidth will be 10 * Bottleneck bandwidth
-
-AQM = "fq_pie"  # set at router egress interface
-
-ECN = True
-
-SET_TARGET = False
-
-TOTAL_NODES_PER_SIDE = 1  # Number of clients
-
-DEBUG_LOGS = True
-FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
-TCP_CONG_CONTROL = "cubic"
-
-TEST_DURATION = 210
-STEP_SIZE = 0.05  # Resolution in seconds
-UPLOAD_STREAMS = 1
-
-OFFLOADS = True  # GSO, GRO
-NIC_BUFFER = ""  # TX
-
-# Adding CL arguments functionality
 # If no arguments are added then the ones in this script are used
 parser = argparse.ArgumentParser()
-parser.add_argument("--rtt", type=int, help="Enter the RTT")
-parser.add_argument("--bottleneck_bw", type=int, help="Enter the bottleneck bandwidth")
-parser.add_argument("--AQM", type=str, help="Enter the AQM algorithm")
-parser.add_argument("--cong_control_algo", type=str, help="Enter the congestion control algorithm")
-parser.add_argument("--ecn", type=str, help="Set the ecn flag")
-parser.add_argument("--offloads", type=str, help="Set the offloads flag")
-parser.add_argument("--number_of_flows", type=int, help="Set the number of flows")
-parser.add_argument("--target", type=int, help="Set the target")
+parser.add_argument("--rtt", type=int, help="Enter the RTT (ms)")
+parser.add_argument(
+    "--bottleneck_bw", type=int, help="Enter the bottleneck bandwidth (mbit)"
+)
+parser.add_argument("--qdisc", type=str, help="Enter the AQM algorithm")
+parser.add_argument("--ecn", type=str, help="Set the ecn flag (Yes / No)")
+parser.add_argument(
+    "--no_offloads", type=str, help="Turn off GSO, GRO offloads (Yes / No)"
+)
+parser.add_argument(
+    "--number_of_tcp_flows",
+    type=int,
+    help="Set the number of flows (tcp_nup flent test)",
+)
+parser.add_argument(
+    "--qdelay_target", type=int, help="Set the queue delay target (For AQM)"
+)
 
 args = parser.parse_args()
 
@@ -72,40 +41,36 @@ if args.rtt is not None:
 if args.bottleneck_bw is not None:
     BOTTLENECK_BANDWIDTH = args.bottleneck_bw
 
-if args.AQM is not None:
-    AQM = args.AQM
-
-if args.cong_control_algo is not None:
-    TCP_CONG_CONTROL = args.cong_control_algo
+if args.qdisc is not None:
+    AQM = args.qdisc
 
 if args.ecn is not None:
-    ECN = True if args.ecn == "Yes" else False
+    ECN = args.ecn == "Yes"
 
-if args.offloads is not None:
-    OFFLOADS = True if args.offloads == "Yes" else False
+if args.no_offloads is not None:
+    OFFLOADS = not args.no_offloads == "Yes"
 
-if args.number_of_flows is not None:
-    UPLOAD_STREAMS = args.number_of_flows
+if args.number_of_tcp_flows is not None:
+    UPLOAD_STREAMS = args.number_of_tcp_flows
 
-if args.target is not None:
-    SET_TARGET = True
-    TARGET = args.target
+if args.qdelay_target is not None:
+    QDELAY_TARGET = args.target
 
-title = str(UPLOAD_STREAMS) + "_"
-title += "ECN_" if ECN else ""
-title += "OFL_" if OFFLOADS else ""
-title += AQM + "_" + str(BOTTLENECK_BANDWIDTH) + BW_UNIT + '_' + str(TOTAL_LATENCY) + LAT_UNIT + '_' + TCP_CONG_CONTROL + "_"
+title = f"{AQM}_{UPLOAD_STREAMS}_{BOTTLENECK_BANDWIDTH}_{TOTAL_LATENCY}"
+
+title += "_ECN" if ECN else ""
+title += "_OFFLD" if OFFLOADS else ""
+
 ###############################
 
-client_router_latency = TOTAL_LATENCY / 8
-router_router_latency = TOTAL_LATENCY / 4
+client_router_latency = TOTAL_LATENCY / 16
+router_router_latency = 3 * TOTAL_LATENCY / 8
 
-client_router_latency = str(client_router_latency) + LAT_UNIT
-router_router_latency = str(router_router_latency) + LAT_UNIT
+client_router_latency = f"{client_router_latency}{LATENCY_UNIT}"
+router_router_latency = f"{router_router_latency}{LATENCY_UNIT}"
 
-
-client_router_bandwidth = str(BOTTLENECK_BANDWIDTH * 10) + BW_UNIT
-bottleneck_bandwidth = str(BOTTLENECK_BANDWIDTH) + BW_UNIT
+client_router_bandwidth = f"{BOTTLENECK_BANDWIDTH * 10}{BW_UNIT}"
+bottleneck_bandwidth = f"{BOTTLENECK_BANDWIDTH}{BW_UNIT}"
 
 # Assigning number of nodes on either sides of the dumbbell according to input
 num_of_left_nodes = TOTAL_NODES_PER_SIDE
@@ -223,41 +188,39 @@ right_router.add_route("DEFAULT", right_router_connection)
 
 qdisc_kwargs = {}
 
-if AQM == "fq_pie" or AQM == "fq_codel":
-    if ECN:
-        qdisc_kwargs = {"ecn": ""}
-
-    if SET_TARGET:
-        qdisc_kwargs["target"] = f"{TARGET}ms"
 
 if AQM == "cake":
     # configure cake parameters to run COBALT
     qdisc_kwargs["unlimited"] = ""
     qdisc_kwargs["raw"] = ""
     qdisc_kwargs["besteffort"] = ""
-    qdisc_kwargs["flowblind"] = ""
     qdisc_kwargs["no-ack-filter"] = ""
-    qdisc_kwargs["rtt"] = str(TOTAL_LATENCY) + LAT_UNIT
+    qdisc_kwargs["rtt"] = f"{TOTAL_LATENCY}{LATENCY_UNIT}"
+else:
+    qdisc_kwargs["target"] = QDELAY_TARGET
+
+    if ECN:
+        qdisc_kwargs["ecn"] = ""
 
 
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
 for i in range(num_of_left_nodes):
     left_node_connections[i][0].set_attributes(
-        client_router_bandwidth, client_router_latency, **qdisc_kwargs
+        client_router_bandwidth, client_router_latency
     )
     left_node_connections[i][1].set_attributes(
-        client_router_bandwidth, client_router_latency, **qdisc_kwargs
+        client_router_bandwidth, client_router_latency
     )
 
 # Setting up the attributes of the connections between
 # the nodes on the right-side and the right-router
 for i in range(num_of_right_nodes):
     right_node_connections[i][0].set_attributes(
-        client_router_bandwidth, client_router_latency, **qdisc_kwargs
+        client_router_bandwidth, client_router_latency
     )
     right_node_connections[i][1].set_attributes(
-        client_router_bandwidth, client_router_latency, **qdisc_kwargs
+        client_router_bandwidth, client_router_latency
     )
 
 print("Setting Router connection attributes")
@@ -272,7 +235,6 @@ right_router_connection.set_attributes(
 
 artifacts_dir = title + time.strftime("%d-%m_%H:%M:%S.dump")
 os.mkdir(artifacts_dir)
-copy2(os.path.abspath(__file__), artifacts_dir)
 
 workers_list = []
 tcpdump_processes = []
@@ -287,17 +249,8 @@ for i in range(TOTAL_NODES_PER_SIDE):
     dest_node = right_nodes[i]
 
     if not OFFLOADS:
-        exec_subprocess(
-            f"ip netns e {src_node.id} eththool --offloads {src_node.interfaces[0].id} gro off"
-        )
-        exec_subprocess(
-            f"ip netns e {src_node.id} eththool --offloads {src_node.interfaces[0].id} gso off"
-        )
-
-    if NIC_BUFFER:
-        exec_subprocess(
-            f"ip netns e {src_node.id} eththool --set-ring {src_node.interfaces[0].id} tx {NIC_BUFFER}"
-        )
+        left_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
+        right_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
 
     if ECN:
         src_node.configure_tcp_param("ecn", 1)
@@ -340,9 +293,14 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     # run tcpdump on all the right nodes to analyse packets and compute link utilization
     # the output is stored in different files for different nodes
-    tcpdump_processes.append(subprocess.Popen(
-        f"""ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt""",
-        stdout=open(tcpdump_output_file, "w"), stderr=subprocess.DEVNULL, shell=True))
+    tcpdump_processes.append(
+        subprocess.Popen(
+            f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt",
+            stdout=open(tcpdump_output_file, "w"),
+            stderr=subprocess.DEVNULL,
+            shell=True,
+        )
+    )
 
 print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
 
@@ -364,13 +322,13 @@ for tcpdump_output_file in tcpdump_output_files:
     output = f.read()
 
     # get the timestamp and packet size of each of the packets
-    timestamps = list(
-        map(lambda x: float(x), re.findall("^\d*\.\d*", output, re.M)))
+    timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
     packet_sizes = list(
-        map(lambda x: int(x.split(" ")[1][:-1]), re.findall("length [\d]*:", output)))
+        map(lambda x: int(x.split(" ")[1][:-1]), re.findall(r"length [\d]*:", output))
+    )
 
-    for i in range(len(packet_sizes)):
-        packets.append((timestamps[i], packet_sizes[i]))
+    for i, pckt_size in enumerate(packet_sizes):
+        packets.append((timestamps[i], pckt_size))
 
 # sort the packets received by different nodes according to the timestamp
 packets.sort()
@@ -384,10 +342,14 @@ throughput_datapoints = []
 for packet in packets:
     # if the packet belongs to a different bucket than the previous one, append
     # the stats to a new datapoint and create a new bucket
-    if(packet[0]-curr_timestamp > STEP_SIZE):
+    if packet[0] - curr_timestamp > STEP_SIZE:
         time_datapoints.append(curr_time_datapoint)
         throughput_datapoints.append(
-            curr_packet_size_sum*8*100/(BOTTLENECK_BANDWIDTH*1000000*STEP_SIZE))
+            curr_packet_size_sum
+            * 8
+            * 100
+            / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
+        )
         curr_timestamp = packet[0]
         curr_packet_size_sum = packet[1]
         curr_time_datapoint += STEP_SIZE
@@ -398,7 +360,8 @@ for packet in packets:
 
 time_datapoints.append(curr_time_datapoint)
 throughput_datapoints.append(
-    curr_packet_size_sum*8*100/(BOTTLENECK_BANDWIDTH*1000000*STEP_SIZE))
+    curr_packet_size_sum * 8 * 100 / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
+)
 
 # Plot the points on a graph and save the graph as an image
 plt.xlabel("Time (seconds)")
