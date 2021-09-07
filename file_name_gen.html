@@ -85,7 +85,7 @@
                 grp.appendChild(inp_div);
             }
             var labl = document.createElement('h4');
-            labl.innerText = params[prm][0];
+            labl.innerText = (params[prm].length > 1) ? params[prm][0] : prm.toUpperCase();
             labl.className = "mb-2";
             var horline = document.createElement('hr');
             horline.className = "mb-3";
