@@ -19,3 +19,23 @@ UPLOAD_STREAMS = 1
 
 OFFLOADS = True  # GSO, GRO
 OFFLOAD_TYPES = ["gso", "gro", "tso"]
+
+
+def arg_parser_def(parser):
+    parser.add_argument("--rtt", type=int, help="RTT of flows(ms)")
+    parser.add_argument(
+        "--bottleneck_bw", type=int, help="bottleneck bandwidth (mbit)"
+    )
+    parser.add_argument("--qdisc", type=str, help="AQM (qdisc) algorithm")
+    parser.add_argument("--ecn", type=str, help="ecn flag (Yes / No)")
+    parser.add_argument(
+        "--no_offloads", type=str, help="Turn off GSO, GRO offloads (Yes / No)"
+    )
+    parser.add_argument(
+        "--number_of_tcp_flows",
+        type=int,
+        help="Number of flows (tcp_nup flent test)",
+    )
+    parser.add_argument(
+        "--qdelay_target", type=int, help="Queue delay target (For AQM)"
+    )

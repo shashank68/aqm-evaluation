@@ -14,26 +14,10 @@ from exp_config import *
 ####### CONFIGURATION ###########
 
 # If no arguments are added then the ones in this script are used
-parser = argparse.ArgumentParser()
-parser.add_argument("--rtt", type=int, help="Enter the RTT (ms)")
-parser.add_argument(
-    "--bottleneck_bw", type=int, help="Enter the bottleneck bandwidth (mbit)"
-)
-parser.add_argument("--qdisc", type=str, help="Enter the AQM algorithm")
-parser.add_argument("--ecn", type=str, help="Set the ecn flag (Yes / No)")
-parser.add_argument(
-    "--no_offloads", type=str, help="Turn off GSO, GRO offloads (Yes / No)"
-)
-parser.add_argument(
-    "--number_of_tcp_flows",
-    type=int,
-    help="Set the number of flows (tcp_nup flent test)",
-)
-parser.add_argument(
-    "--qdelay_target", type=int, help="Set the queue delay target (For AQM)"
-)
+args_parser = argparse.ArgumentParser()
+arg_parser_def(args_parser)
 
-args = parser.parse_args()
+args = args_parser.parse_args()
 
 if args.rtt is not None:
     TOTAL_LATENCY = args.rtt
@@ -61,6 +45,7 @@ title = f"{AQM}_{UPLOAD_STREAMS}_{BOTTLENECK_BANDWIDTH}_{TOTAL_LATENCY}"
 title += "_ECN" if ECN else ""
 title += "_OFFLD" if OFFLOADS else ""
 
+print(title)
 ###############################
 
 client_router_latency = TOTAL_LATENCY / 16
