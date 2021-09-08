@@ -15,7 +15,7 @@ FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 TEST_DURATION = 200
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
-RUNNER_DELAY = 0 # Delay before starting netperf etc..
+RUNNER_DELAY = 0  # Delay before starting netperf etc..
 
 OFFLOADS = True
 OFFLOAD_TYPES = ["gso", "gro", "tso"]

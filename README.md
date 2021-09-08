@@ -57,8 +57,8 @@ sudo python3 dumbell_flent.py --rtt=100 --bottleneck_bw=80 --qdisc=fq_codel --ec
 Check additional notes/scripts [here](./misc_patch_scripts/)
 
 
-To plot all graphs run:
+To run tests with all combination of network configs, use:
 ```bash
-python3 plot_all.py
+python3 run_all_combinations.py
 ```
 - You may need to change the python path in this script if you use a virtual environment or anaconda
