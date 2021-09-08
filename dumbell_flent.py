@@ -260,13 +260,14 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     cmd += f"""
         --socket-stats \
+        --delay {RUNNER_DELAY} \
         --step-size={STEP_SIZE} \
         --test-parameter upload_streams={UPLOAD_STREAMS} \
         --length {TEST_DURATION} \
         --host {right_node_connections[i][0].address.get_addr(with_subnet=False)} \
         --output {artifacts_dir}/output.txt \
         --data-dir {artifacts_dir} \
-        --title-extra {title} 
+        --title-extra {title}
         """
 
     if DEBUG_LOGS:
