@@ -9,16 +9,11 @@ sudo apt install ./iproute2_5.7.0-1ubuntu1_amd64.deb
 
 - Apply the given patch to parse fq_pie qdisc stats in flent
 ```bash
-sudo patch /usr/share/flent/flent/runners.py < misc_patch_scripts/flent_runners_fq_pie.diff
+sudo patch /usr/share/flent/flent/runners.py < flent_runners_fq_pie.diff
 ```
 
-- To use `qdisc_stats_interfaces` test parameter, Run the below command once:
+- To use `qdisc_stats_interfaces` test parameter and to speed up flent execution, Use the provided iterators:
 
 ```bash
-sudo cp misc_patch_scripts/tc_iterate.sh /usr/share/flent/flent/scripts/
-```
-
-- To speed up Flent execution, use the provided ss_iterate.sh script
-```bash
-sudo cp misc_patch_scripts/ss_iterate.sh /usr/share/flent/flent/scripts/
+sudo cp tc_iterate.sh ss_iterate.sh /usr/share/flent/flent/scripts/
 ```

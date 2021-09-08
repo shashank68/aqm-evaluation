@@ -23,7 +23,9 @@ buffer=""
 
 command_string=$(cat <<EOF
 which tc_iterate >/dev/null && exec tc_iterate $buffer -i $interface -c $count -I $interval -C $command;
-for i in \$(seq $count); do
+duration="$(echo "$count*$interval" | bc) sec";
+endtime=\$(date -d "\$duration" +%s%N);
+while (( \$(date +%s%N) <= \$endtime )); do
     tc -s $command show dev $interface;
     date '+Time: %s.%N';
     echo "---";

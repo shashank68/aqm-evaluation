@@ -6,7 +6,7 @@ import time
 from multiprocessing import Process
 
 import matplotlib.pyplot as plt
-from nest.engine.exec import exec_exp_commands, exec_subprocess
+from nest.engine.exec import exec_subprocess
 from nest.topology import *
 
 from exp_config import *
@@ -349,3 +349,4 @@ plt.xlabel("Time (seconds)")
 plt.ylabel("Link Utilization (Percentage)")
 plt.plot(time_datapoints, throughput_datapoints)
 plt.savefig(f"{artifacts_dir}/link_utilization.png")
+os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))

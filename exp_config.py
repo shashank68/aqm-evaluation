@@ -5,14 +5,14 @@
 
 AQM = "fq_pie"  # set at router egress interface
 QDELAY_TARGET = "5ms"
-ECN = True
+ECN = False
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
 DEBUG_LOGS = True
 FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 
-TEST_DURATION = 20
+TEST_DURATION = 200
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
 

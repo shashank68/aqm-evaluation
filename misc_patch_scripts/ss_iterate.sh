@@ -41,11 +41,9 @@ then
 fi
 
 command_string=$(cat <<EOF
-rntime=$(echo "$count*$interval" | bc)
-runtime="\$rntime second"
-endtime=\$(date -ud "\$runtime" +%s)
-while [[ \$(date -u +%s) -le \$endtime ]]
-do
+duration="$(echo "$count*$interval" | bc) sec";
+endtime=\$(date -d "\$duration" +%s%N);
+while (( \$(date +%s%N) <= \$endtime )); do
     ss -t -i -p -n state connected "dst $target $filter"
     echo ''
     date '+Time: %s.%N';
