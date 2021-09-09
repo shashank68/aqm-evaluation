@@ -28,21 +28,24 @@ git clone https://github.com/shashank68/flent-aqm-tests
 
 ```bash
 sudo python dumbell_flent.py --help
-usage: dumbell_flent.py [-h] [--rtt RTT] [--bottleneck_bw BOTTLENECK_BW] [--qdisc QDISC] [--ecn ECN] [--no_offloads NO_OFFLOADS] [--number_of_tcp_flows NUMBER_OF_TCP_FLOWS] [--qdelay_target QDELAY_TARGET]
+
+usage: dumbell_flent.py [-h] [--rtt RTT] [--ecn {Yes,No}] [--duration TIME] [--bottleneck_bw BANDWIDTH] [--qdisc {fq_codel,fq_pie,codel,pie,cake}] [--no_offloads {Yes,No}] [--number_of_tcp_flows NUM] [--qdelay_target TARGET]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --rtt RTT             RTT of flows(ms)
+  --rtt RTT             Round trip time for flows (ms)
+  --ecn {Yes,No}        Turn on ECN
+  --duration TIME       Duration of test in seconds
   --bottleneck_bw BANDWIDTH
-                        bottleneck bandwidth (mbit)
-  --qdisc QDISC         AQM (qdisc) algorithm
-  --ecn ECN             ecn flag (Yes / No)
-  --no_offloads NO_OFFLOADS
-                        Turn off GSO, GRO offloads (Yes / No)
-  --number_of_tcp_flows NUMBER_OF_TCP_FLOWS
-                        Number of flows (tcp_nup flent test)
-  --qdelay_target QDELAY_TARGET
-                        Queue delay target (For AQM)
+                        Bottleneck bandwidth (mbit)
+  --qdisc {fq_codel,fq_pie,codel,pie,cake}
+                        AQM algorithm (qdisc)
+  --no_offloads {Yes,No}
+                        Turn off GSO, GRO offloads
+  --number_of_tcp_flows NUM
+                        Number of flows in tcp_nup flent test
+  --qdelay_target TARGET
+                        Queue delay target (For qdisc)
 ```
 
 

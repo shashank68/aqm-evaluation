@@ -22,18 +22,38 @@ OFFLOAD_TYPES = ["gso", "gro", "tso"]
 
 
 def arg_parser_def(parser):
-    parser.add_argument("--rtt", type=int, help="RTT of flows(ms)")
-    parser.add_argument("--bottleneck_bw", type=int, help="bottleneck bandwidth (mbit)")
-    parser.add_argument("--qdisc", type=str, help="AQM (qdisc) algorithm")
-    parser.add_argument("--ecn", type=str, help="ecn flag (Yes / No)")
+    parser.add_argument("--rtt", type=int, help="Round trip time for flows (ms)")
+    parser.add_argument("--ecn", type=str, help="Turn on ECN", choices=["Yes", "No"])
     parser.add_argument(
-        "--no_offloads", type=str, help="Turn off GSO, GRO offloads (Yes / No)"
+        "--duration", type=int, help="Duration of test in seconds", metavar="TIME"
+    )
+    parser.add_argument(
+        "--bottleneck_bw",
+        type=int,
+        help="Bottleneck bandwidth (mbit)",
+        metavar="BANDWIDTH",
+    )
+    parser.add_argument(
+        "--qdisc",
+        type=str,
+        help="AQM algorithm (qdisc)",
+        choices=["fq_codel", "fq_pie", "codel", "pie", "cake"],
+    )
+    parser.add_argument(
+        "--no_offloads",
+        type=str,
+        help="Turn off GSO, GRO offloads",
+        choices=["Yes", "No"],
     )
     parser.add_argument(
         "--number_of_tcp_flows",
         type=int,
-        help="Number of flows (tcp_nup flent test)",
+        help="Number of flows in tcp_nup flent test",
+        metavar="NUM",
     )
     parser.add_argument(
-        "--qdelay_target", type=int, help="Queue delay target (For AQM)"
+        "--qdelay_target",
+        type=int,
+        help="Queue delay target (For qdisc)",
+        metavar="TARGET",
     )

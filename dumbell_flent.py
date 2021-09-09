@@ -13,35 +13,23 @@ from exp_config import *
 
 ####### CONFIGURATION ###########
 
-# If no arguments are added then the ones in this script are used
 args_parser = argparse.ArgumentParser()
 arg_parser_def(args_parser)
-
 args = args_parser.parse_args()
 
-if args.rtt is not None:
-    TOTAL_LATENCY = args.rtt
+AQM = args.qdisc or AQM
+UPLOAD_STREAMS = args.number_of_tcp_flows or UPLOAD_STREAMS
+BOTTLENECK_BANDWIDTH = args.bottleneck_bw or BOTTLENECK_BANDWIDTH
+TOTAL_LATENCY = args.rtt or TOTAL_LATENCY
+QDELAY_TARGET = args.qdelay_target or QDELAY_TARGET
+TEST_DURATION = args.duration or TEST_DURATION
 
-if args.bottleneck_bw is not None:
-    BOTTLENECK_BANDWIDTH = args.bottleneck_bw
-
-if args.qdisc is not None:
-    AQM = args.qdisc
-
-if args.ecn is not None:
+if args.ecn:
     ECN = args.ecn == "Yes"
-
-if args.no_offloads is not None:
-    OFFLOADS = not args.no_offloads == "Yes"
-
-if args.number_of_tcp_flows is not None:
-    UPLOAD_STREAMS = args.number_of_tcp_flows
-
-if args.qdelay_target is not None:
-    QDELAY_TARGET = args.target
+if args.no_offloads:
+    OFFLOADS = args.no_offloads == "No"
 
 title = f"{AQM}_{UPLOAD_STREAMS}_{BOTTLENECK_BANDWIDTH}_{TOTAL_LATENCY}"
-
 title += "_ECN" if ECN else ""
 title += "_OFFLD" if OFFLOADS else ""
 
