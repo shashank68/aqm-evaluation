@@ -219,6 +219,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
 for i in range(TOTAL_NODES_PER_SIDE):
     src_node = left_nodes[i]
     dest_node = right_nodes[i]
+    dest_host_addr = right_node_connections[i][0].address.get_addr(with_subnet=False)
 
     if not OFFLOADS:
         left_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
@@ -234,32 +235,22 @@ for i in range(TOTAL_NODES_PER_SIDE):
     tcpdump_output_file = f"{artifacts_dir}/tcpdump.out"
     tcpdump_output_files.append(tcpdump_output_file)
 
-    # listen to the router qdisc stats only if it is the first client
-    if i == 0:
-        cmd = f"""
-        ip netns exec {src_node.id} flent {FLENT_TEST_NAME} \
-        --test-parameter qdisc_stats_hosts={left_router.id} \
-        --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id} \
-        """
-    else:
-        cmd = f"""
-        ip netns exec {src_node.id} flent {FLENT_TEST_NAME} \
-        """
-
-    cmd += f"""
-        --socket-stats \
-        --delay {RUNNER_DELAY} \
-        --step-size={STEP_SIZE} \
-        --test-parameter upload_streams={UPLOAD_STREAMS} \
-        --length {TEST_DURATION} \
-        --host {right_node_connections[i][0].address.get_addr(with_subnet=False)} \
-        --output {artifacts_dir}/output.txt \
-        --data-dir {artifacts_dir} \
-        --title-extra {title}
-        """
-
+    cmd = (
+        f"ip netns exec {src_node.id} flent {FLENT_TEST_NAME} "
+        f" --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id}"
+        f" --test-parameter qdisc_stats_hosts={left_router.id}"
+        f" --test-parameter upload_streams={UPLOAD_STREAMS}"
+        f" --output {artifacts_dir}/output.txt"
+        f" --data-dir {artifacts_dir}"
+        f" --length {TEST_DURATION}"
+        f" --step-size {STEP_SIZE}"
+        f" --host {dest_host_addr}"
+        f" --delay {RUNNER_DELAY}"
+        f" --title-extra {title}"
+        " --socket-stats"
+    )
     if DEBUG_LOGS:
-        cmd += f"--log-file {artifacts_dir}/debug.log"
+        cmd += f" --log-file {artifacts_dir}/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
@@ -267,7 +258,8 @@ for i in range(TOTAL_NODES_PER_SIDE):
     # the output is stored in different files for different nodes
     tcpdump_processes.append(
         subprocess.Popen(
-            f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt",
+            f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id}"
+            " -evvv -tt",
             stdout=open(tcpdump_output_file, "w"),
             stderr=subprocess.DEVNULL,
             shell=True,

@@ -29,17 +29,13 @@ all_cmds = []
 
 for combination in params_combinations:
     all_cmds.append(
-        """python \
-        ../dumbell_flent.py \
-        --qdisc {} \
-        --number_of_tcp_flows {} \
-        --bottleneck_bw {} \
-        --rtt {} \
-        --ecn {} \
-        --no_offloads {} \
-        """.format(
-            *combination
-        )
+        "python ../dumbell_flent.py"
+        " --qdisc {}"
+        " --number_of_tcp_flows {}"
+        " --bottleneck_bw {}"
+        " --rtt {}"
+        " --ecn {}"
+        " --no_offloads {}".format(*combination)
     )
 
 dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
