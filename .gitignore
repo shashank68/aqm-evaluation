@@ -2,3 +2,4 @@
 *.flent.gz
 *.dump/
 __pycache__/
+combinations_config.json
