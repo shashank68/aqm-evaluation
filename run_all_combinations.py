@@ -27,8 +27,6 @@ for key, val in config.items():
     if val:
         globals()[key] = val
 
-print(QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, OFFLOADS)
-
 params_combinations = itertools.product(
     QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, OFFLOADS
 )
