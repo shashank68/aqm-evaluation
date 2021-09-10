@@ -60,7 +60,11 @@ sudo python3 dumbell_flent.py --rtt=100 --bottleneck_bw=80 --qdisc=fq_codel --ec
 Check additional notes/scripts [here](./misc_patch_scripts/)
 
 
-To run tests with all combination of network configs, set the parameters required in `combinations_config.json` and run:
+* To run tests with all combination of network configs run, 
+```bash
+cp combinations_config.json.example combinations_config.json
+```
+and set the parameters required in `combinations_config.json` and run:
 ```bash
 python3 run_all_combinations.py
 ```
