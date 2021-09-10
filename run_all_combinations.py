@@ -1,4 +1,4 @@
-# Run dumbell_flent.py script with different configurations
+"""Run dumbell_flent.py script with different configurations"""
 
 import os
 import json
@@ -20,12 +20,19 @@ ECN = ["No", "Yes"]
 OFFLOADS = ["No", "Yes"]
 
 
-with open("combinations_config.json", "r") as json_file:
-    config = json.load(json_file)
+try:
+    with open("combinations_config.json", "r") as json_file:
+        config = json.load(json_file)
+    for key, val in config.items():
+        if val:
+            globals()[key] = val
+except FileNotFoundError:
+    print(
+        "Copy combinations_config.json.example to combinations_config.json"
+        " to use custom combinations.\n"
+        "Running tests with default combinations\n"
+    )
 
-for key, val in config.items():
-    if val:
-        globals()[key] = val
 
 params_combinations = itertools.product(
     QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, OFFLOADS
@@ -48,10 +55,10 @@ dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
 os.mkdir(dir_name)
 os.chdir(dir_name)
 
-num_iterations = len(all_cmds) // NUM_PROCESSES
-rem = len(all_cmds) % NUM_PROCESSES
+NUM_ITERATIONS = len(all_cmds) // NUM_PROCESSES
+REM_CMDS_LEN = len(all_cmds) % NUM_PROCESSES
 
-for i in tqdm(range(0, num_iterations)):
+for i in tqdm(range(0, NUM_ITERATIONS)):
     procs = [
         Process(target=exec_subprocess, args=(cmd,))
         for cmd in all_cmds[i * NUM_PROCESSES : (i + 1) * NUM_PROCESSES]
@@ -61,7 +68,7 @@ for i in tqdm(range(0, num_iterations)):
     for proc in procs:
         proc.join()
 
-for i in range(rem):
+for i in range(REM_CMDS_LEN):
     exec_subprocess(all_cmds[-(i + 1)])
 
 os.chown(f"../{dir_name}", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
