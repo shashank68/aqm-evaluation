@@ -1,4 +1,7 @@
 import argparse
+import json
+import gzip
+import glob
 import os
 import re
 import subprocess
@@ -282,6 +285,7 @@ packets = []
 for tcpdump_output_file in tcpdump_output_files:
     f = open(tcpdump_output_file, "r")
     output = f.read()
+    f.close()
 
     # get the timestamp and packet size of each of the packets
     timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
@@ -297,37 +301,57 @@ packets.sort()
 
 curr_timestamp = packets[0][0]
 curr_packet_size_sum = packets[0][1]
-time_datapoints = []
-curr_time_datapoint = 0
-throughput_datapoints = []
+link_utilization_raw_values = []
+link_utilization_metadata = {
+    "IDX": 7,
+    "MAX_VALUE": 0,
+    "MEAN_VALUE": 0,
+    "MIN_VALUE": 101,
+    "RUNNER": "PingRunner",
+    "UNITS": "percent"
+}
+percent_sum = 0
+seq = 1.0
 
 for packet in packets:
     # if the packet belongs to a different bucket than the previous one, append
     # the stats to a new datapoint and create a new bucket
     if packet[0] - curr_timestamp > STEP_SIZE:
-        time_datapoints.append(curr_time_datapoint)
-        throughput_datapoints.append(
-            curr_packet_size_sum
-            * 8
-            * 100
-            / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
-        )
+        link_utilization_percent = curr_packet_size_sum* 8 * 100 \
+        / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
+
+        link_utilization_raw_values.append({
+            'seq': seq,
+            't': curr_timestamp,
+            'val': link_utilization_percent})
+        link_utilization_metadata["MAX_VALUE"] = max(
+            link_utilization_metadata["MAX_VALUE"], link_utilization_percent)
+        link_utilization_metadata["MIN_VALUE"] = min(
+            link_utilization_metadata["MIN_VALUE"], link_utilization_percent)
+
+        percent_sum += link_utilization_percent
         curr_timestamp = packet[0]
         curr_packet_size_sum = packet[1]
-        curr_time_datapoint += STEP_SIZE
+        seq += 1.0
 
     # else add the stats to the current datapoint
     else:
         curr_packet_size_sum += packet[1]
 
-time_datapoints.append(curr_time_datapoint)
-throughput_datapoints.append(
-    curr_packet_size_sum * 8 * 100 / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
-)
+link_utilization_metadata["MEAN_VALUE"] = percent_sum / seq
 
-# Plot the points on a graph and save the graph as an image
-plt.xlabel("Time (seconds)")
-plt.ylabel("Link Utilization (Percentage)")
-plt.plot(time_datapoints, throughput_datapoints)
-plt.savefig(f"{artifacts_dir}/link_utilization.png")
-os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
+# Adding the raw values of link utilization into the gz file
+results_file = glob.glob(f"{artifacts_dir}/*.gz")[0]
+results_file_content = ""
+
+# Firstly, decompress the content and get the json results
+with gzip.open(results_file, 'rb') as f:
+    results_file_content = json.loads(f.read())
+
+# Add the link utilization results into the dictionary
+results_file_content["raw_values"]["Link Utilization"] = link_utilization_raw_values
+results_file_content["metadata"]["SERIES_META"]["Link Utilization"] = link_utilization_metadata
+
+# Alter the existing gz file to include the additional content
+with gzip.open(results_file, 'wb') as f:
+    f.write(json.dumps(results_file_content).encode('UTF-8'))
