@@ -70,7 +70,7 @@ for i in tqdm(range(0, NUM_ITERATIONS)):
     for proc in procs:
         proc.join()
 
-for i in range(REM_CMDS_LEN):
+for i in tqdm(range(REM_CMDS_LEN)):
     exec_subprocess(all_cmds[-(i + 1)])
 
 os.chown(f"../{dir_name}", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
