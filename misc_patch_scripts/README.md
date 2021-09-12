@@ -17,3 +17,10 @@ sudo patch /usr/share/flent/flent/runners.py < flent_runners_fq_pie.diff
 ```bash
 sudo cp tc_iterate.sh ss_iterate.sh /usr/share/flent/flent/scripts/
 ```
+
+- Apply the given patch to support link utilization plots
+
+```bash
+sudo patch /usr/share/flent/flent/tests/tcp_nup.conf tcp_nup.conf.diff
+sudo patch /usr/share/flent/flent/tests/tcp_stats.inc tcp_stats.inc.diff
+```

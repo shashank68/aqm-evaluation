@@ -1,0 +1,11 @@
+--- /usr/share/flent/flent/tests/tcp_nup.conf	2021-06-25 02:49:14.000000000 +0530
++++ tcp_nup.conf	2021-09-12 15:10:38.813652064 +0530
+@@ -18,6 +18,8 @@
+     ('Ping (ms) ICMP',
+      {'ip_version': IP_VERSION, 'interval': STEP_SIZE, 'length': TOTAL_LENGTH,
+       'host': HOST, 'units': 'ms', 'runner': 'ping'}),
++    ('Link Utilization',
++     {'interval': STEP_SIZE, 'length': TOTAL_LENGTH, 'units': 'ms','host': HOST, 'runner': 'ping'}),
+ ])
+ 
+ def add_stream(i, marking='CS0', cc_algo=None,

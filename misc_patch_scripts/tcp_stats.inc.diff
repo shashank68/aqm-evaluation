@@ -1,0 +1,17 @@
+--- /usr/share/flent/flent/tests/tcp_stats.inc	2021-06-25 02:49:14.000000000 +0530
++++ misc_patch_scripts/tcp_stats.inc	2021-09-12 15:06:43.038000000 +0530
+@@ -51,3 +51,14 @@
+                          'raw_key': 'tcp_bbr_bw',
+                          'label': 'BBR BW'},
+                     ]}
++
++PLOTS['link_utilization'] = {'description': 'Link utilization of the bottleneck link',
++                             'type': 'timeseries',
++                             'axis_labels': ['link utilization (percent)'],
++                             'series': [
++                                 {
++                                     'data': 'Link Utilization',
++                                     'label': 'Link Utilization',
++                                 },
++                             ]
++                             }
