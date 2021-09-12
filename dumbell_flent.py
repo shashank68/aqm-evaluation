@@ -8,7 +8,6 @@ import subprocess
 import time
 from multiprocessing import Process
 
-import matplotlib.pyplot as plt
 from nest.engine.exec import exec_subprocess
 from nest.topology import *
 
@@ -308,7 +307,7 @@ link_utilization_metadata = {
     "MEAN_VALUE": 0,
     "MIN_VALUE": 101,
     "RUNNER": "PingRunner",
-    "UNITS": "percent"
+    "UNITS": "percent",
 }
 percent_sum = 0
 seq = 1.0
@@ -317,17 +316,22 @@ for packet in packets:
     # if the packet belongs to a different bucket than the previous one, append
     # the stats to a new datapoint and create a new bucket
     if packet[0] - curr_timestamp > STEP_SIZE:
-        link_utilization_percent = curr_packet_size_sum* 8 * 100 \
-        / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
+        link_utilization_percent = (
+            curr_packet_size_sum
+            * 8
+            * 100
+            / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE)
+        )
 
-        link_utilization_raw_values.append({
-            'seq': seq,
-            't': curr_timestamp,
-            'val': link_utilization_percent})
+        link_utilization_raw_values.append(
+            {"seq": seq, "t": curr_timestamp, "val": link_utilization_percent}
+        )
         link_utilization_metadata["MAX_VALUE"] = max(
-            link_utilization_metadata["MAX_VALUE"], link_utilization_percent)
+            link_utilization_metadata["MAX_VALUE"], link_utilization_percent
+        )
         link_utilization_metadata["MIN_VALUE"] = min(
-            link_utilization_metadata["MIN_VALUE"], link_utilization_percent)
+            link_utilization_metadata["MIN_VALUE"], link_utilization_percent
+        )
 
         percent_sum += link_utilization_percent
         curr_timestamp = packet[0]
@@ -345,13 +349,17 @@ results_file = glob.glob(f"{artifacts_dir}/*.gz")[0]
 results_file_content = ""
 
 # Firstly, decompress the content and get the json results
-with gzip.open(results_file, 'rb') as f:
+with gzip.open(results_file, "rb") as f:
     results_file_content = json.loads(f.read())
 
 # Add the link utilization results into the dictionary
 results_file_content["raw_values"]["Link Utilization"] = link_utilization_raw_values
-results_file_content["metadata"]["SERIES_META"]["Link Utilization"] = link_utilization_metadata
+results_file_content["metadata"]["SERIES_META"][
+    "Link Utilization"
+] = link_utilization_metadata
 
 # Alter the existing gz file to include the additional content
-with gzip.open(results_file, 'wb') as f:
-    f.write(json.dumps(results_file_content).encode('UTF-8'))
+with gzip.open(results_file, "wb") as f:
+    f.write(json.dumps(results_file_content).encode("UTF-8"))
+
+os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))

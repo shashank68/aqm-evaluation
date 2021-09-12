@@ -18,6 +18,7 @@ BOTTLENECK_BANDWIDTHS = [80, 160, 1000]
 RTTS = [4, 40, 80, 800]
 ECN = ["No", "Yes"]
 OFFLOADS = ["No", "Yes"]
+DURATIONS = [200]
 
 
 try:
@@ -35,7 +36,7 @@ except FileNotFoundError:
 
 
 params_combinations = itertools.product(
-    QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, OFFLOADS
+    QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, OFFLOADS, DURATIONS
 )
 
 all_cmds = []
@@ -48,7 +49,8 @@ for combination in params_combinations:
         " --bottleneck_bw {}"
         " --rtt {}"
         " --ecn {}"
-        " --no_offloads {}".format(*combination)
+        " --no_offloads {}"
+        " --duration {}".format(*combination)
     )
 
 dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
