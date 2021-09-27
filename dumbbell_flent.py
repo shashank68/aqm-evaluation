@@ -31,9 +31,9 @@ if args.ecn:
 if args.no_offloads:
     OFFLOADS = args.no_offloads == "No"
 
-title = f"{AQM}_{UPLOAD_STREAMS}_{BOTTLENECK_BANDWIDTH}_{TOTAL_LATENCY}"
-title += "_ECN" if ECN else ""
-title += "_OFFLD" if OFFLOADS else ""
+title = f"{AQM}_{UPLOAD_STREAMS}_{BOTTLENECK_BANDWIDTH}_{TOTAL_LATENCY}_"
+title += "ECN_" if ECN else ""
+title += "OFFLD_" if OFFLOADS else ""
 
 ###############################
 
