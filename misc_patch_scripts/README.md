@@ -1,5 +1,5 @@
 ## Notes
-- `FQ_PIE` AQM support in **iproute2** was added from _version 5.5_.
+FQ_PIE` AQM support in **iproute2** was added from _version 5.5_.
 - To install iproute2 with fq_pie support (e.g: v5.7)
 
 ```bash
