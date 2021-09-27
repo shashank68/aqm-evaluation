@@ -50,7 +50,7 @@ git clone https://github.com/shashank68/flent-aqm-tests
 
 ## Usage
 
-* All **Bold** variable names are configurable network parameters
+Use the `--help` option to view configurable network parameters
 
 ```bash
 sudo python dumbbell_flent.py --help
@@ -73,9 +73,7 @@ optional arguments:
   --qdelay_target TARGET
                         Queue delay target (For qdisc)
 ```
-* If any of the above arguments are not specified, their default values defined in [exp_config.py](./exp_config.py) are used 
-
-
+If any of the above arguments are not specified, their default values defined in [exp_config.py](./exp_config.py) are used
 
 Example Usage 
 ```bash
@@ -90,11 +88,11 @@ Check additional notes/scripts [here](./misc_patch_scripts/)
 
 ## Running Multiple tests
 
-* To run tests with custom combination of parameters, modify the parameters list in `combinations_config.json` by running
+* To run tests with custom combination of parameters, create a `combinations_config.json`
 ```bash
 cp combinations_config.json.example combinations_config.json
 ```
-
+* Modify the values in `combinations_config.json` if required
 * To execute tests with the configured parameters run:
 ```bash
 sudo python run_all_combinations.py
