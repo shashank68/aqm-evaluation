@@ -2,7 +2,7 @@
 
 ## Requirements Setup
 
-* `FQ_PIE` AQM support in **iproute2** was added from _version 5.5_.
+`FQ_PIE` AQM support in **iproute2** was added from _version 5.5_.
 * To install iproute2 with fq_pie support (e.g: v5.7)
 
 ```bash
@@ -73,9 +73,11 @@ optional arguments:
   --qdelay_target TARGET
                         Queue delay target (For qdisc)
 ```
-* If any of the above arguments are not specified, their default values defined in [exp_config.py](./exp_config.py) are used
+* If any of the above arguments are not specified, their default values defined in [exp_config.py](./exp_config.py) are used 
 
-* Example Usage 
+
+
+Example Usage 
 ```bash
 sudo python3 dumbbell_flent.py --rtt=100 --bottleneck_bw=80 --qdisc=fq_codel --ecn=No --no_offloads=Yes
 ```
