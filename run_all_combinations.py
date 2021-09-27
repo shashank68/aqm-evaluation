@@ -1,4 +1,4 @@
-"""Run dumbell_flent.py script with different configurations"""
+"""Run dumbbell_flent.py script with different configurations"""
 
 import os
 import json
