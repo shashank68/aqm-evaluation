@@ -47,12 +47,13 @@ optional arguments:
                         Number of flows in tcp_nup flent test
   --qdelay_target TARGET
                         Queue delay target (For qdisc)
+  --results_dir DIR     Directory to store the results
 ```
 If any of the above arguments are not specified, their default values defined in [exp_config.py](./exp_config.py) are used
 
 Example Usage 
 ```bash
-sudo python3 dumbbell_flent.py --rtt=100 --bottleneck_bw=80 --qdisc=fq_codel --ecn=No --no_offloads=Yes
+sudo python3 dumbbell_flent.py --rtt=100 --bottleneck_bw=80 --qdisc=fq_codel --ecn=No --no_offloads=Yes --results_dir=foo/bar
 ```
 * The flent data file will be generated in a directory for each node.
 * The above script will create a directory `fq_codel_1_80_100_27-09_18:43:53.dump`

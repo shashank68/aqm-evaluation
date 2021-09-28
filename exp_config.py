@@ -20,6 +20,7 @@ RUNNER_DELAY = 0  # Delay before starting netperf etc..
 OFFLOADS = True
 OFFLOAD_TYPES = ["gso", "gro", "tso"]
 
+RESULTS_DIR = '.'
 
 def arg_parser_def(parser):
     parser.add_argument("--rtt", type=int, help="Round trip time for flows (ms)")
@@ -56,4 +57,10 @@ def arg_parser_def(parser):
         type=int,
         help="Queue delay target (For qdisc)",
         metavar="TARGET",
+    )
+    parser.add_argument(
+        "--results_dir",
+        type=str,
+        help="Directory to store the results",
+        metavar="DIR",
     )

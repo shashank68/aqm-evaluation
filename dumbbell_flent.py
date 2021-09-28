@@ -25,6 +25,7 @@ BOTTLENECK_BANDWIDTH = args.bottleneck_bw or BOTTLENECK_BANDWIDTH
 TOTAL_LATENCY = args.rtt or TOTAL_LATENCY
 QDELAY_TARGET = args.qdelay_target or QDELAY_TARGET
 TEST_DURATION = args.duration or TEST_DURATION
+RESULTS_DIR = args.results_dir or RESULTS_DIR
 
 if args.ecn:
     ECN = args.ecn == "Yes"
@@ -207,8 +208,8 @@ right_router_connection.set_attributes(
     bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs
 )
 
-artifacts_dir = title + time.strftime("%d-%m_%H:%M:%S.dump")
-os.mkdir(artifacts_dir)
+artifacts_dir = RESULTS_DIR + '/' + title + time.strftime("%d-%m_%H:%M:%S.dump")
+os.makedirs(artifacts_dir, exist_ok=True)
 
 workers_list = []
 tcpdump_processes = []

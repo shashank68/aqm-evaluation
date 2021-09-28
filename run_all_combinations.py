@@ -42,15 +42,17 @@ params_combinations = itertools.product(
 all_cmds = []
 
 for combination in params_combinations:
+    results_dir = "AQM={}/Flows={}/Bandwidth={}/RTT={}/ECN={}/Offloads={}".format(*combination)
     all_cmds.append(
-        "python ../dumbell_flent.py"
+        "python ../dumbbell_flent.py"
         " --qdisc {}"
         " --number_of_tcp_flows {}"
         " --bottleneck_bw {}"
         " --rtt {}"
         " --ecn {}"
         " --no_offloads {}"
-        " --duration {}".format(*combination)
+        " --duration {}"
+        " --results_dir {}".format(*combination, results_dir)
     )
 
 dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
