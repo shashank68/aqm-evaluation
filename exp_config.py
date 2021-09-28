@@ -20,7 +20,8 @@ RUNNER_DELAY = 0  # Delay before starting netperf etc..
 OFFLOADS = True
 OFFLOAD_TYPES = ["gso", "gro", "tso"]
 
-RESULTS_DIR = '.'
+RESULTS_DIR = "."
+
 
 def arg_parser_def(parser):
     parser.add_argument("--rtt", type=int, help="Round trip time for flows (ms)")

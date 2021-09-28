@@ -1,7 +1,7 @@
 import argparse
-import json
-import gzip
 import glob
+import gzip
+import json
 import os
 import re
 import subprocess
@@ -208,7 +208,7 @@ right_router_connection.set_attributes(
     bottleneck_bandwidth, router_router_latency, AQM, **qdisc_kwargs
 )
 
-artifacts_dir = RESULTS_DIR + '/' + title + time.strftime("%d-%m_%H:%M:%S.dump")
+artifacts_dir = f"""{RESULTS_DIR}/{title}{time.strftime("%d-%m_%H:%M:%S.dump")}"""
 os.makedirs(artifacts_dir, exist_ok=True)
 
 workers_list = []

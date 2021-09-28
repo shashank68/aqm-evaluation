@@ -1,9 +1,9 @@
 """Run dumbbell_flent.py script with different configurations"""
 
-import os
-import json
-import time
 import itertools
+import json
+import os
+import time
 from multiprocessing import Process
 
 from nest.engine.exec import exec_subprocess
@@ -19,7 +19,7 @@ RTTS = [4, 40, 80, 800]
 ECN = ["No", "Yes"]
 OFFLOADS = ["No", "Yes"]
 DURATIONS = [200]
-
+RESULTS_DIR = "."
 
 try:
     with open("combinations_config.json", "r") as json_file:
@@ -42,7 +42,9 @@ params_combinations = itertools.product(
 all_cmds = []
 
 for combination in params_combinations:
-    results_dir = "AQM={}/Flows={}/Bandwidth={}/RTT={}/ECN={}/Offloads={}".format(*combination)
+    RESULTS_DIR = "AQM={}/Flows={}/Bandwidth={}/RTT={}/ECN={}/Offloads={}".format(
+        *combination
+    )
     all_cmds.append(
         "python ../dumbbell_flent.py"
         " --qdisc {}"
@@ -52,7 +54,7 @@ for combination in params_combinations:
         " --ecn {}"
         " --no_offloads {}"
         " --duration {}"
-        " --results_dir {}".format(*combination, results_dir)
+        " --results_dir {}".format(*combination, RESULTS_DIR)
     )
 
 dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
