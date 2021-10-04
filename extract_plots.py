@@ -34,9 +34,10 @@ plot_titles = [
 ]
 
 for result_file in all_flent_result_files:
+    res_file = os.path.basename(result_file)
     res_dir = os.path.dirname(result_file)
     os.chdir(f"{BASE_DIR}/{res_dir}")
     os.makedirs("plots", exist_ok=True)
     for plot_title in plot_titles:
-        exec_subprocess(f"flent {result_file} --plot {plot_title} -o plots/{plot_title}.png")
+        exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
     
