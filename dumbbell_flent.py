@@ -277,6 +277,17 @@ for i in range(TOTAL_NODES_PER_SIDE):
     workers_list[i].join()
     tcpdump_processes[i].terminate()
 
+# Extract the images of the plots
+root_dir = os.getcwd()
+os.chdir(artifacts_dir)
+res_file = glob.glob(f"*.gz")[0]
+os.makedirs("plots", exist_ok=True)
+
+for plot_title in PLOT_TITLES:
+    exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
+
+os.chdir(root_dir)
+
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
 ####### LINK UTILISATION COMPUTATION #######
