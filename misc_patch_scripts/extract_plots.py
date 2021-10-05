@@ -1,8 +1,9 @@
 import os
 import glob
 from nest.engine import exec_subprocess
+
 # get the flent result file name
-all_flent_result_files = glob.glob("*/*/*/*/*/*/*/*/*.gz")
+all_flent_result_files = glob.glob("../*/*/*/*/*/*/*/*/*.gz")
 
 BASE_DIR = os.getcwd()
 
@@ -39,5 +40,6 @@ for result_file in all_flent_result_files:
     os.chdir(f"{BASE_DIR}/{res_dir}")
     os.makedirs("plots", exist_ok=True)
     for plot_title in plot_titles:
-        exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
-    
+        exec_subprocess(
+            f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png"
+        )

@@ -48,6 +48,7 @@ PLOT_TITLES = [
     "link_utilization",
 ]
 
+
 def arg_parser_def(parser):
     parser.add_argument("--rtt", type=int, help="Round trip time for flows (ms)")
     parser.add_argument("--ecn", type=str, help="Turn on ECN", choices=["Yes", "No"])
