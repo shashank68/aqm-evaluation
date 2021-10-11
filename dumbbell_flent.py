@@ -231,7 +231,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
     dest_node = right_nodes[i]
     dest_host_addr = right_node_connections[i][0].address.get_addr(with_subnet=False)
 
-    if not OFFLOADS:
+    if not OFFLOADS:    
         left_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
         right_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
 
@@ -261,7 +261,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         " --socket-stats"
     )
     if DEBUG_LOGS:
-        cmd += f" --log-file {artifacts_dir}/debug.log"
+        cmd += f" --log-file {artifacts_dir}/up/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
@@ -280,7 +280,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         " --socket-stats"
     )
     if DEBUG_LOGS:
-        cmd += f" --log-file {artifacts_dir}/debug.log"
+        cmd += f" --log-file {artifacts_dir}/down/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
