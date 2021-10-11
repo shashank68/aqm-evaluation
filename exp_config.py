@@ -1,8 +1,13 @@
+from run_all_combinations import BOTTLENECK_BANDWIDTHS
+
+
 (TOTAL_LATENCY, LATENCY_UNIT) = (80, "ms")  # Total Round trip latency
 
 # Client to router Bandwidth will be 10 * Bottleneck bandwidth
-(router_1_bw, BW_UNIT_1) = (80, "mbit")
-(router_2_bw, BW_UNIT_2) = (150, "mbit")
+
+(BOTTLENECK_BANDWIDTH, BW_UNIT) = ("80", "mbit")
+ROUTER1_BW = 80
+ROUTER2_BW = 150
 
 AQM = "fq_pie"  # set at router egress interface
 QDELAY_TARGET = "5ms"
@@ -10,11 +15,11 @@ ECN = False
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
-DEBUG_LOGS = False
+DEBUG_LOGS = True
 FLENT_TEST_NAME_1 = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 FLENT_TEST_NAME_2 = "tcp_ndown"
 
-TEST_DURATION = 200
+TEST_DURATION = 20
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
 RUNNER_DELAY = 0  # Delay before starting netperf etc..
@@ -61,6 +66,18 @@ def arg_parser_def(parser):
         "--bottleneck_bw",
         type=int,
         help="Bottleneck bandwidth (mbit)",
+        metavar="BANDWIDTH",
+    )
+    parser.add_argument(
+        "--router1_bw",
+        type=int,
+        help="Bottleneck Bandwidth at the router1 interface (mbit)",
+        metavar="BANDWIDTH",
+    )
+    parser.add_argument(
+        "--router2_bw",
+        type=int,
+        help="Bottleneck Bandwidth at the router2 interface (mbit)",
         metavar="BANDWIDTH",
     )
     parser.add_argument(

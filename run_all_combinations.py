@@ -25,8 +25,15 @@ try:
     with open("combinations_config.json", "r") as json_file:
         config = json.load(json_file)
     for key, val in config.items():
+        print(key, val)
         if val:
+            if isinstance(val, list):
+                for i, e in enumerate(val):
+                    if isinstance(e, list):
+                        val[i] = tuple(*e)
+                # val = [tuple(e) for e in val if isinstance(e, list)]
             globals()[key] = val
+        print(globals()[key])
 except FileNotFoundError:
     print(
         "Copy combinations_config.json.example to combinations_config.json"
@@ -56,6 +63,7 @@ for combination in params_combinations:
         " --duration {}"
         " --results_dir {}".format(*combination, RESULTS_DIR)
     )
+    print("CMD:\n", all_cmds[-1])
 
 dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
 os.mkdir(dir_name)
