@@ -12,7 +12,7 @@ TOTAL_NODES_PER_SIDE = 1  # Number of clients
 DEBUG_LOGS = False
 FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 
-TEST_DURATION = 200
+TEST_DURATION = 30
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
 RUNNER_DELAY = 0  # Delay before starting netperf etc..
@@ -46,6 +46,8 @@ PLOT_TITLES = [
     "tcp_rtt_bar_combine",
     "tcp_pacing",
     "link_utilization",
+    "backlog",
+    "drops",
 ]
 
 
