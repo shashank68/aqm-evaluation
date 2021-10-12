@@ -28,12 +28,7 @@ try:
         print(key, val)
         if val:
             if isinstance(val, list):
-                for i, e in enumerate(val):
-                    if isinstance(e, list):
-                        val[i] = tuple(*e)
-                # val = [tuple(e) for e in val if isinstance(e, list)]
-            globals()[key] = val
-        print(globals()[key])
+                globals()[key] = val
 except FileNotFoundError:
     print(
         "Copy combinations_config.json.example to combinations_config.json"
@@ -56,11 +51,11 @@ for combination in params_combinations:
         "python ../dumbbell_flent.py"
         " --qdisc {}"
         " --number_of_tcp_flows {}"
-        " --bottleneck_bw {}"
         " --rtt {}"
         " --ecn {}"
         " --no_offloads {}"
         " --duration {}"
+        " --bottleneck_bw {}"
         " --results_dir {}".format(*combination, RESULTS_DIR)
     )
     print("CMD:\n", all_cmds[-1])
