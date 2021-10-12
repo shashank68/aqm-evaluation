@@ -4,6 +4,7 @@ import gzip
 import json
 import os
 import re
+import shlex
 import subprocess
 import time
 from multiprocessing import Process
@@ -259,13 +260,12 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     # run tcpdump on all the right nodes to analyse packets and compute link utilization
     # the output is stored in different files for different nodes
+    tcpdump_cmd = f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt"
     tcpdump_processes.append(
         subprocess.Popen(
-            f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id}"
-            " -evvv -tt",
+            shlex.split(tcpdump_cmd),
             stdout=open(tcpdump_output_file, "w"),
             stderr=subprocess.DEVNULL,
-            shell=True,
         )
     )
 
@@ -280,7 +280,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
 # Extract the images of the plots
 root_dir = os.getcwd()
 os.chdir(artifacts_dir)
-res_file = glob.glob(f"*.gz")[0]
+res_file = glob.glob("*.gz")[0]
 os.makedirs("plots", exist_ok=True)
 
 for plot_title in PLOT_TITLES:
@@ -359,7 +359,6 @@ link_utilization_metadata["MEAN_VALUE"] = percent_sum / seq
 
 # Adding the raw values of link utilization into the gz file
 results_file = glob.glob(f"{artifacts_dir}/*.gz")[0]
-results_file_content = ""
 
 # Firstly, decompress the content and get the json results
 with gzip.open(results_file, "rb") as f:
@@ -376,3 +375,4 @@ with gzip.open(results_file, "wb") as f:
     f.write(json.dumps(results_file_content).encode("UTF-8"))
 
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
+os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
