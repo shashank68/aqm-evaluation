@@ -1,6 +1,3 @@
-from run_all_combinations import BOTTLENECK_BANDWIDTHS
-
-
 (TOTAL_LATENCY, LATENCY_UNIT) = (80, "ms")  # Total Round trip latency
 
 # Client to router Bandwidth will be 10 * Bottleneck bandwidth
@@ -53,6 +50,8 @@ PLOT_TITLES = [
     "tcp_rtt_bar_combine",
     "tcp_pacing",
     "link_utilization",
+    "backlog",
+    "drops",
 ]
 
 

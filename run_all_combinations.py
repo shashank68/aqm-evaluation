@@ -17,7 +17,7 @@ FLOWS = [1, 3, 16]
 BOTTLENECK_BANDWIDTHS = [80, 160, 1000]
 RTTS = [4, 40, 80, 800]
 ECN = ["No", "Yes"]
-OFFLOADS = ["No", "Yes"]
+NO_OFFLOADS = ["No", "Yes"]
 DURATIONS = [200]
 RESULTS_DIR = "."
 
@@ -25,10 +25,8 @@ try:
     with open("combinations_config.json", "r") as json_file:
         config = json.load(json_file)
     for key, val in config.items():
-        print(key, val)
         if val:
-            if isinstance(val, list):
-                globals()[key] = val
+            globals()[key] = val
 except FileNotFoundError:
     print(
         "Copy combinations_config.json.example to combinations_config.json"
@@ -38,27 +36,26 @@ except FileNotFoundError:
 
 
 params_combinations = itertools.product(
-    QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, OFFLOADS, DURATIONS
+    QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, NO_OFFLOADS, DURATIONS
 )
 
 all_cmds = []
 
 for combination in params_combinations:
-    RESULTS_DIR = "AQM={}/Flows={}/Bandwidth={}/RTT={}/ECN={}/Offloads={}".format(
+    RESULTS_DIR = "AQM={}/Flows={}/Bandwidth={}/RTT={}/ECN={}/No_Offloads={}".format(
         *combination
     )
     all_cmds.append(
         "python ../dumbbell_flent.py"
         " --qdisc {}"
         " --number_of_tcp_flows {}"
+        " --bottleneck_bw {}"
         " --rtt {}"
         " --ecn {}"
         " --no_offloads {}"
         " --duration {}"
-        " --bottleneck_bw {}"
         " --results_dir {}".format(*combination, RESULTS_DIR)
     )
-    print("CMD:\n", all_cmds[-1])
 
 dir_name = time.strftime("ALL_COMBO_%d-%m_%H:%M:%S.dump")
 os.mkdir(dir_name)

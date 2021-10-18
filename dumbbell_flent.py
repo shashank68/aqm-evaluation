@@ -2,8 +2,10 @@ import argparse
 import glob
 import gzip
 import json
+from logging import root
 import os
 import re
+import shlex
 import subprocess
 import time
 from multiprocessing import Process
@@ -213,7 +215,6 @@ right_router_connection.set_attributes(
 )
 artifacts_dir = f"""{RESULTS_DIR}/{title}{time.strftime("%d-%m_%H:%M:%S.dump")}"""
 os.makedirs(artifacts_dir, exist_ok=True)
-os.chdir(artifacts_dir)
 
 workers_list = []
 tcpdump_processes = []
@@ -260,13 +261,12 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     # run tcpdump on the right router to analyse packets and compute link utilization
     # the output is stored in different files for different nodes
+    tcpdump_cmd = f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt"
     tcpdump_processes.append(
         subprocess.Popen(
-            f"ip netns exec {right_router.id} tcpdump -i {right_router_connection.id}"
-            " -evvv -tt",
+            shlex.split(tcpdump_cmd),
             stdout=open(tcpdump_output_file, "w"),
             stderr=subprocess.DEVNULL,
-            shell=True,
         )
     )
 
@@ -282,15 +282,16 @@ print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
 # Extract the images of the plots
 print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
-base_dir = os.getcwd()
-res_file = glob.glob(f"*.gz")[0]
+root_dir = os.getcwd()
+os.chdir(artifacts_dir)
+res_file = glob.glob("*.gz")[0]
 os.makedirs("plots", exist_ok=True)
 
 for plot_title in PLOT_TITLES:
     exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
 
 print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
-os.chdir(base_dir)
+os.chdir(root_dir)
 
 
 ####### LINK UTILISATION COMPUTATION #######
@@ -379,3 +380,4 @@ with gzip.open(results_file, "wb") as f:
     f.write(json.dumps(results_file_content).encode("UTF-8"))
 
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
+os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
