@@ -277,17 +277,6 @@ for i in range(TOTAL_NODES_PER_SIDE):
     workers_list[i].join()
     tcpdump_processes[i].terminate()
 
-# Extract the images of the plots
-root_dir = os.getcwd()
-os.chdir(artifacts_dir)
-res_file = glob.glob("*.gz")[0]
-os.makedirs("plots", exist_ok=True)
-
-for plot_title in PLOT_TITLES:
-    exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
-
-os.chdir(root_dir)
-
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
 ####### LINK UTILISATION COMPUTATION #######
@@ -374,5 +363,16 @@ results_file_content["metadata"]["SERIES_META"][
 with gzip.open(results_file, "wb") as f:
     f.write(json.dumps(results_file_content).encode("UTF-8"))
 
+
+# Extract the images of the plots
+root_dir = os.getcwd()
+os.chdir(artifacts_dir)
+res_file = glob.glob("*.gz")[0]
+os.makedirs("plots", exist_ok=True)
+
+for plot_title in PLOT_TITLES:
+    exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
+
+os.chown("plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
+os.chdir(root_dir)
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
-os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
