@@ -1,0 +1,28 @@
+diff --git a/flent/tests/tcp_ndown.conf b/flent/tests/tcp_ndown.conf
+index 92658fe..11eadda 100644
+--- a/flent/tests/tcp_ndown.conf
++++ b/flent/tests/tcp_ndown.conf
+@@ -18,6 +18,10 @@ DATA_SETS = o([
+     ('Ping (ms) ICMP',
+      {'ip_version': IP_VERSION, 'interval': STEP_SIZE, 'length': TOTAL_LENGTH,
+       'host': HOST, 'units': 'ms', 'runner': 'ping'}),
++    ('TCP Download: Cumulative',
++     {'apply_to': [glob("TCP download::*", exclude=["TCP download sum"])],
++      'units': 'Mbits/s',
++      'runner': 'cumulative',}),
+ ])
+ 
+ def add_stream(i, marking='CS0', cc_algo=None,
+@@ -57,7 +61,11 @@ PLOTS = o([
+                   'label': 'Avg',
+                   'smoothing': 10,
+                   'color': 'black',
+-                  'linewidth': 2}]}),
++                  'linewidth': 2},
++                  {
++                    'data': 'TCP Download: Cumulative',
++                    'label': 'Cumulative',
++                  },]}),
+     ('download_scaled',
+      {'description': 'Download bandwidth w/axes scaled to remove outliers',
+       'parent': 'download',

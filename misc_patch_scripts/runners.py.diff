@@ -1,0 +1,32 @@
+diff --git a/flent/runners.py b/flent/runners.py
+index b364954..433d175 100644
+--- a/flent/runners.py
++++ b/flent/runners.py
+@@ -2527,6 +2527,27 @@ class SumRunner(ComputingRunner):
+     def compute(self, values):
+         return math.fsum(values)
+ 
++class CumulativeRunner(ComputingRunner):
++    def compute_result(self, res):
++        if not self.keys:
++            return res
++
++        new_res = []
++        prefix_sum=0
++        keys = Glob.expand_list(self.keys, res.series_names, [self.name])
++        total_time = 0
++
++        for r in res.zipped(keys):
++            values = [v for v in r[1:] if v is not None]
++            if not values:
++                new_res.append(None)
++            else:
++                prefix_sum+=math.fsum(values)
++                total_time+=len(values)
++                new_res.append(prefix_sum/total_time)
++        
++        res.add_result(self.name, new_res)
++        return res
+ 
+ class DiffMinRunner(ComputingRunner):
+     command = "Diff from min (computed)"
