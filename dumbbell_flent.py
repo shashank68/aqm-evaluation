@@ -252,7 +252,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
     #UPLOAD FLOW
     cmd = (
         f"ip netns exec {src_node.id} flent {FLENT_TEST_NAME_1} "
-        f" --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id}"
+        f" --test-parameter qdisc_stats_interfaces={left_router_connection.id}"
         f" --test-parameter qdisc_stats_hosts={left_router.id}"
         f" --test-parameter upload_streams={UPLOAD_STREAMS}"
         f" --output {artifacts_dir}/up/output.txt"
@@ -271,10 +271,10 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     # DOWNLOAD FLOW
     cmd = (
-        f"ip netns exec {dest_node.id} flent {FLENT_TEST_NAME_2} "
-        f" --test-parameter qdisc_stats_interfaces={right_router_connection.ifb.id}"
+        f"ip netns exec {dest_node.id} flent {FLENT_TEST_NAME_1} "
+        f" --test-parameter qdisc_stats_interfaces={right_router_connection.id}"
         f" --test-parameter qdisc_stats_hosts={right_router.id}"
-        f" --test-parameter download_streams={UPLOAD_STREAMS}"
+        f" --test-parameter upload_streams={UPLOAD_STREAMS}"
         f" --output {artifacts_dir}/down/output.txt"
         f" --data-dir {artifacts_dir}/down"
         f" --length {TEST_DURATION}"
@@ -312,17 +312,17 @@ for i in range(TOTAL_NODES_PER_SIDE):
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
 # Extract the images of the plots
-print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
-root_dir = os.getcwd()
-os.chdir(artifacts_dir)
-res_file = glob.glob("*/*.gz")[0]
-os.makedirs("plots", exist_ok=True)
-
-for plot_title in PLOT_TITLES:
-    exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
-
-print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
-os.chdir(root_dir)
+# print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
+# root_dir = os.getcwd()
+# os.chdir(artifacts_dir)
+# res_file = glob.glob("*/*.gz")[0]
+# os.makedirs("plots", exist_ok=True)
+#
+# for plot_title in PLOT_TITLES:
+#     exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
+#
+# print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
+# os.chdir(root_dir)
 
 
 ####### LINK UTILISATION COMPUTATION #######
@@ -411,4 +411,4 @@ os.chdir(root_dir)
 #     f.write(json.dumps(results_file_content).encode("UTF-8"))
 
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
-os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
+# os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))

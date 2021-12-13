@@ -6,7 +6,7 @@
 ROUTER1_BW = 80
 ROUTER2_BW = 150
 
-AQM = "fq_pie"  # set at router egress interface
+AQM = "fq_codel"  # set at router egress interface
 QDELAY_TARGET = "5ms"
 ECN = False
 
@@ -16,7 +16,7 @@ DEBUG_LOGS = True
 FLENT_TEST_NAME_1 = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 FLENT_TEST_NAME_2 = "tcp_ndown"
 
-TEST_DURATION = 20
+TEST_DURATION = 10
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
 RUNNER_DELAY = 0  # Delay before starting netperf etc..
