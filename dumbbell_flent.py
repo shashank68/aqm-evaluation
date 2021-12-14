@@ -24,8 +24,8 @@ args = args_parser.parse_args()
 AQM = args.qdisc or AQM
 UPLOAD_STREAMS = args.number_of_tcp_flows or UPLOAD_STREAMS
 BOTTLENECK_BANDWIDTH = args.bottleneck_bw or BOTTLENECK_BANDWIDTH
-ROUTER1_BW = args.router1_bw or ROUTER1_BW
-ROUTER2_BW = args.router2_bw or ROUTER2_BW
+ROUTER1_BW_INT = args.router1_bw or ROUTER1_BW
+ROUTER2_BW_INT = args.router2_bw or ROUTER2_BW
 TOTAL_LATENCY = args.rtt or TOTAL_LATENCY
 QDELAY_TARGET = args.qdelay_target or QDELAY_TARGET
 TEST_DURATION = args.duration or TEST_DURATION
@@ -49,8 +49,8 @@ client_router_latency = f"{client_router_latency}{LATENCY_UNIT}"
 router_router_latency = f"{router_router_latency}{LATENCY_UNIT}"
 
 client_router_bandwidth = f"1000mbit"
-ROUTER1_BW = f"{ROUTER1_BW}{BW_UNIT}"
-ROUTER2_BW = f"{ROUTER2_BW}{BW_UNIT}"
+ROUTER1_BW = f"{ROUTER1_BW_INT}{BW_UNIT}"
+ROUTER2_BW = f"{ROUTER2_BW_INT}{BW_UNIT}"
 
 
 # Assigning number of nodes on either sides of the dumbbell according to input
@@ -369,6 +369,10 @@ for tcpdump_output_file in tcpdump_output_files:
     percent_sum = 0
     seq = 1.0
 
+    bottleneck_bandwidth = ROUTER1_BW_INT
+    if(os.path.basename(os.path.dirname(tcpdump_output_file))=='down'):
+        bottleneck_bandwidth=ROUTER2_BW_INT
+
     for packet in packets:
         # if the packet belongs to a different bucket than the previous one, append
         # the stats to a new datapoint and create a new bucket
@@ -377,7 +381,7 @@ for tcpdump_output_file in tcpdump_output_files:
                 curr_packet_size_sum
                 * 8
                 * 100
-                / (int(BOTTLENECK_BANDWIDTH) * 1000000 * STEP_SIZE) ## TODO: Asymmetric case
+                / (bottleneck_bandwidth * 1000000 * STEP_SIZE)
             )
 
             link_utilization_raw_values.append(
