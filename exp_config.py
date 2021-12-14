@@ -27,31 +27,11 @@ OFFLOAD_TYPES = ["gso", "gro", "tso"]
 RESULTS_DIR = "."
 
 PLOT_TITLES = [
-    "totals",
     "upload",
-    "upload_box",
-    "upload_with_ping",
-    "upload_with_ping_and_tcp_rtt",
-    "tcp_delivery_with_ping",
-    "tcp_delivery_with_rtt",
-    "upload_scaled",
-    "ping",
     "ping_smooth",
-    "ping_cdf",
-    "box_totals",
-    "box_totals_combine",
-    "box_ping_combine",
-    "box_combine",
-    "bar_combine",
     "tcp_cwnd",
-    "tcp_rtt",
-    "tcp_rtt_cdf",
-    "tcp_rtt_box_combine",
-    "tcp_rtt_bar_combine",
-    "tcp_pacing",
     "link_utilization",
     "backlog",
-    "drops",
 ]
 
 
