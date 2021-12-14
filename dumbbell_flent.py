@@ -322,18 +322,20 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
-# Extract the images of the plots
-# print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
-# root_dir = os.getcwd()
-# os.chdir(artifacts_dir)
-# res_file = glob.glob("*/*.gz")[0]
-# os.makedirs("plots", exist_ok=True)
-#
-# for plot_title in PLOT_TITLES:
-#     exec_subprocess(f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
-#
-# print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
-# os.chdir(root_dir)
+print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
+root_dir = os.getcwd()
+for subdir in ['up', 'down']:
+    os.chdir(artifacts_dir + '/' + subdir)
+    res_file = glob.glob("*.gz")[0]
+    os.makedirs("plots", exist_ok=True)
+
+    for plot_title in PLOT_TITLES:
+        exec_subprocess(
+            f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
+
+    os.chdir(root_dir)
+
+print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
 
 
 ####### LINK UTILISATION COMPUTATION #######
