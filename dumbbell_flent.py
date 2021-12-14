@@ -246,10 +246,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
         src_node.configure_tcp_param("ecn", 1)
         dest_node.configure_tcp_param("ecn", 1)
 
-    tcpdump_output_file = f"{artifacts_dir}/tcpdump.out"
-    tcpdump_output_files.append(tcpdump_output_file)
-
-    #UPLOAD FLOW
+    ###  UPLOAD FLOW  ###
     cmd = (
         f"ip netns exec {src_node.id} flent {FLENT_TEST_NAME_1} "
         f" --test-parameter qdisc_stats_interfaces={left_router_connection.id}"
@@ -269,7 +266,20 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
-    # DOWNLOAD FLOW
+    tcpdump_output_file = f"{artifacts_dir}/up/tcpdump.out"
+    tcpdump_output_files.append(tcpdump_output_file)
+
+    # run tcpdump on the right router to analyse packets and compute link utilization
+    tcpdump_cmd = f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt -Q in"
+    tcpdump_processes.append(
+        subprocess.Popen(
+            shlex.split(tcpdump_cmd),
+            stdout=open(tcpdump_output_file, "w"),
+            stderr=subprocess.DEVNULL,
+        )
+    )
+
+    ###   DOWNLOAD FLOW  ###
     cmd = (
         f"ip netns exec {dest_node.id} flent {FLENT_TEST_NAME_1} "
         f" --test-parameter qdisc_stats_interfaces={right_router_connection.id}"
@@ -289,17 +299,18 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
+    tcpdump_output_file = f"{artifacts_dir}/down/tcpdump.out"
+    tcpdump_output_files.append(tcpdump_output_file)
 
-    # run tcpdump on the right router to analyse packets and compute link utilization
-    # the output is stored in different files for different nodes
-    # tcpdump_cmd = f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt"
-    # tcpdump_processes.append(
-    #     subprocess.Popen(
-    #         shlex.split(tcpdump_cmd),
-    #         stdout=open(tcpdump_output_file, "w"),
-    #         stderr=subprocess.DEVNULL,
-    #     )
-    # )
+    # run tcpdump on the left router to analyse packets and compute link utilization
+    tcpdump_cmd = f"ip netns exec {src_node.id} tcpdump -i {src_node.interfaces[0].id} -evvv -tt -Q in"
+    tcpdump_processes.append(
+        subprocess.Popen(
+            shlex.split(tcpdump_cmd),
+            stdout=open(tcpdump_output_file, "w"),
+            stderr=subprocess.DEVNULL,
+        )
+    )
 
 print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
 for worker in workers_list:
@@ -326,89 +337,85 @@ print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
 
 ####### LINK UTILISATION COMPUTATION #######
+for tcpdump_output_file in tcpdump_output_files:
+    packets = []
+    f = open(tcpdump_output_file, "r")
+    output = f.read()
+    f.close()
+    # os.remove(tcpdump_output_file)
 
-# packets = []
-# for tcpdump_output_file in tcpdump_output_files:
-#     f = open(tcpdump_output_file, "r")
-#     output = f.read()
-#     f.close()
-#     os.remove(tcpdump_output_file)
-#
-#     # get the timestamp and packet size of each of the packets
-#     timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
-#     packet_sizes = list(
-#         map(lambda x: int(x.split(" ")[1][:-1]), re.findall(r"length [\d]*:", output))
-#     )
-#
-#     for i, pckt_size in enumerate(packet_sizes):
-#         packets.append((timestamps[i], pckt_size))
-#
-# # sort the packets received by different nodes according to the timestamp
-# packets.sort()
-#
-# curr_timestamp = packets[0][0]
-# curr_packet_size_sum = packets[0][1]
-# link_utilization_raw_values = []
-# link_utilization_metadata = {
-#     "IDX": 7,
-#     "MAX_VALUE": 0,
-#     "MEAN_VALUE": 0,
-#     "MIN_VALUE": 101,
-#     "RUNNER": "PingRunner",
-#     "UNITS": "percent",
-# }
-# percent_sum = 0
-# seq = 1.0
-#
-# for packet in packets:
-#     # if the packet belongs to a different bucket than the previous one, append
-#     # the stats to a new datapoint and create a new bucket
-#     if packet[0] - curr_timestamp > STEP_SIZE:
-#         link_utilization_percent = (
-#             curr_packet_size_sum
-#             * 8
-#             * 100
-#             / (BOTTLENECK_BANDWIDTH * 1000000 * STEP_SIZE) ## TODO: Asymmetric case
-#         )
-#
-#         link_utilization_raw_values.append(
-#             {"seq": seq, "t": curr_timestamp, "val": link_utilization_percent}
-#         )
-#         link_utilization_metadata["MAX_VALUE"] = max(
-#             link_utilization_metadata["MAX_VALUE"], link_utilization_percent
-#         )
-#         link_utilization_metadata["MIN_VALUE"] = min(
-#             link_utilization_metadata["MIN_VALUE"], link_utilization_percent
-#         )
-#
-#         percent_sum += link_utilization_percent
-#         curr_timestamp = packet[0]
-#         curr_packet_size_sum = packet[1]
-#         seq += 1.0
-#
-#     # else add the stats to the current datapoint
-#     else:
-#         curr_packet_size_sum += packet[1]
-#
-# link_utilization_metadata["MEAN_VALUE"] = percent_sum / seq
-#
-# # Adding the raw values of link utilization into the gz file
-# results_file = glob.glob(f"{artifacts_dir}/*.gz")[0]
-# results_file_content = ""
-#
-# # Firstly, decompress the content and get the json results
-# with gzip.open(results_file, "rb") as f:
-#     results_file_content = json.loads(f.read())
-#
-# # Add the link utilization results into the dictionary
-# results_file_content["raw_values"]["Link Utilization"] = link_utilization_raw_values
-# results_file_content["metadata"]["SERIES_META"][
-#     "Link Utilization"
-# ] = link_utilization_metadata
-#
-# # Alter the existing gz file to include the additional content
-# with gzip.open(results_file, "wb") as f:
-#     f.write(json.dumps(results_file_content).encode("UTF-8"))
+    # get the timestamp and packet size of each of the packets
+    timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
+    packet_sizes = list(
+        map(lambda x: int(x.split(" ")[1][:-1]), re.findall(r"length [\d]*:", output))
+    )
+
+    for i, pckt_size in enumerate(packet_sizes):
+        packets.append((timestamps[i], pckt_size))
+
+    curr_timestamp = packets[0][0]
+    curr_packet_size_sum = packets[0][1]
+    link_utilization_raw_values = []
+    link_utilization_metadata = {
+        "IDX": 7,
+        "MAX_VALUE": 0,
+        "MEAN_VALUE": 0,
+        "MIN_VALUE": 101,
+        "RUNNER": "PingRunner",
+        "UNITS": "percent",
+    }
+    percent_sum = 0
+    seq = 1.0
+
+    for packet in packets:
+        # if the packet belongs to a different bucket than the previous one, append
+        # the stats to a new datapoint and create a new bucket
+        if packet[0] - curr_timestamp > STEP_SIZE:
+            link_utilization_percent = (
+                curr_packet_size_sum
+                * 8
+                * 100
+                / (int(BOTTLENECK_BANDWIDTH) * 1000000 * STEP_SIZE) ## TODO: Asymmetric case
+            )
+
+            link_utilization_raw_values.append(
+                {"seq": seq, "t": curr_timestamp, "val": link_utilization_percent}
+            )
+            link_utilization_metadata["MAX_VALUE"] = max(
+                link_utilization_metadata["MAX_VALUE"], link_utilization_percent
+            )
+            link_utilization_metadata["MIN_VALUE"] = min(
+                link_utilization_metadata["MIN_VALUE"], link_utilization_percent
+            )
+
+            percent_sum += link_utilization_percent
+            curr_timestamp = packet[0]
+            curr_packet_size_sum = packet[1]
+            seq += 1.0
+
+        # else add the stats to the current datapoint
+        else:
+            curr_packet_size_sum += packet[1]
+
+    link_utilization_metadata["MEAN_VALUE"] = percent_sum / seq
+
+    # Adding the raw values of link utilization into the gz file
+    results_file = glob.glob(f"{os.path.dirname(tcpdump_output_file)}/*.gz")[0]
+    results_file_content = ""
+
+    # Firstly, decompress the content and get the json results
+    with gzip.open(results_file, "rb") as f:
+        results_file_content = json.loads(f.read())
+
+    # Add the link utilization results into the dictionary
+    results_file_content["raw_values"]["Link Utilization"] = link_utilization_raw_values
+    results_file_content["metadata"]["SERIES_META"][
+        "Link Utilization"
+    ] = link_utilization_metadata
+
+    # Alter the existing gz file to include the additional content
+    with gzip.open(results_file, "wb") as f:
+        f.write(json.dumps(results_file_content).encode("UTF-8"))
 
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
 # os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
