@@ -344,7 +344,7 @@ for tcpdump_output_file in tcpdump_output_files:
     f = open(tcpdump_output_file, "r")
     output = f.read()
     f.close()
-    # os.remove(tcpdump_output_file)
+    os.remove(tcpdump_output_file)
 
     # get the timestamp and packet size of each of the packets
     timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
