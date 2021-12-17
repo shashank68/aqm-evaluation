@@ -4,17 +4,17 @@
 (router_1_bw, BW_UNIT_1) = (80, "mbit")
 (router_2_bw, BW_UNIT_2) = (150, "mbit")
 
-AQM = "fq_pie"  # set at router egress interface
+AQM = "fq_codel"  # set at router egress interface
 QDELAY_TARGET = "5ms"
 ECN = False
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
-DEBUG_LOGS = False
+DEBUG_LOGS = True
 FLENT_TEST_NAME_1 = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
-FLENT_TEST_NAME_2 = "tcp_ndown"
+FLENT_TEST_NAME_2 = "tcp_nup"
 
-TEST_DURATION = 200
+TEST_DURATION = 5
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 1
 RUNNER_DELAY = 0  # Delay before starting netperf etc..

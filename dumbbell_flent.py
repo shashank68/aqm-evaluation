@@ -33,9 +33,9 @@ if args.ecn:
 if args.no_offloads:
     OFFLOADS = args.no_offloads == "No"
 
-title = f"{AQM}_{UPLOAD_STREAMS}_{router_1_bw}up_{router_2_bw}down_{TOTAL_LATENCY}_"
-title += "ECN_" if ECN else ""
-title += "OFFLD_" if OFFLOADS else ""
+title = f"{AQM}_{UPLOAD_STREAMS}_{router_1_bw}up_{router_2_bw}down_{TOTAL_LATENCY}"
+title += "_ECN" if ECN else ""
+title += "_OFFLD" if OFFLOADS else ""
 
 ###############################
 
@@ -214,30 +214,32 @@ path = os.getcwd()
 artifacts_dir = f"""{RESULTS_DIR}/{title}{time.strftime("%d-%m_%H:%M:%S.dump")}"""
 os.makedirs(artifacts_dir, exist_ok=True)
 os.chdir(artifacts_dir)
-os.makedirs("up", exist_ok=True)
-os.makedirs("down", exist_ok=True)
+os.makedirs("left", exist_ok=True)
+os.makedirs("right", exist_ok=True)
 os.chdir(path)
 
 workers_list = []
 tcpdump_processes = []
 tcpdump_output_files = []
 
-for i in range(TOTAL_NODES_PER_SIDE):
-    cmd = f"ip netns exec {right_nodes[i].id} netserver"
-    exec_subprocess(cmd)
+cmd = f"ip netns exec {right_nodes[0].id} netserver"
+exec_subprocess(cmd)
+cmd = f"ip netns exec {left_nodes[0].id} netserver"
+exec_subprocess(cmd)
 
 for i in range(TOTAL_NODES_PER_SIDE):
-    src_node = left_nodes[i]
-    dest_node = right_nodes[i]
-    dest_host_addr = right_node_connections[i][0].address.get_addr(with_subnet=False)
+    left_node = left_nodes[i]
+    right_node = right_nodes[i]
+    left_host_addr = left_node_connections[i][0].address.get_addr(with_subnet=False)
+    right_host_addr = right_node_connections[i][0].address.get_addr(with_subnet=False)
 
     if not OFFLOADS:    
         left_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
         right_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
 
     if ECN:
-        src_node.configure_tcp_param("ecn", 1)
-        dest_node.configure_tcp_param("ecn", 1)
+        left_node.configure_tcp_param("ecn", 1)
+        right_node.configure_tcp_param("ecn", 1)
 
     # node_dir = f"{artifacts_dir}/{src_node.name}"
     # os.mkdir(node_dir)
@@ -247,40 +249,42 @@ for i in range(TOTAL_NODES_PER_SIDE):
     # tcpdump_output_files.append(tcpdump_output_file)
 
     cmd = (
-        f"ip netns exec {src_node.id} flent {FLENT_TEST_NAME_1} "
+        f"ip netns exec {left_node.id} flent {FLENT_TEST_NAME_1} "
         f" --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id}"
         f" --test-parameter qdisc_stats_hosts={left_router.id}"
         f" --test-parameter upload_streams={UPLOAD_STREAMS}"
-        f" --output {artifacts_dir}/up/output.txt"
-        f" --data-dir {artifacts_dir}/up"
+        f" --output {artifacts_dir}/left/output.txt"
+        f" --data-dir {artifacts_dir}/left"
         f" --length {TEST_DURATION}"
         f" --step-size {STEP_SIZE}"
-        f" --host {dest_host_addr}"
+        f" --host {right_host_addr}"
         f" --delay {RUNNER_DELAY}"
         f" --title-extra {title}"
         " --socket-stats"
     )
     if DEBUG_LOGS:
-        cmd += f" --log-file {artifacts_dir}/up/debug.log"
+        cmd += f" --log-file {artifacts_dir}/left/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
+    # Flent from right node
+
     cmd = (
-        f"ip netns exec {src_node.id} flent {FLENT_TEST_NAME_2} "
-        f" --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id},{right_router_connection.ifb.id}"
-        f" --test-parameter qdisc_stats_hosts={left_router.id},{right_router.id}"
-        f" --test-parameter download_streams={UPLOAD_STREAMS}"
-        f" --output {artifacts_dir}/down/output.txt"
-        f" --data-dir {artifacts_dir}/down"
+        f"ip netns exec {right_node.id} flent {FLENT_TEST_NAME_2} "
+        f" --test-parameter qdisc_stats_interfaces={right_router_connection.ifb.id}"
+        f" --test-parameter qdisc_stats_hosts={right_router.id}"
+        f" --test-parameter upload_streams={UPLOAD_STREAMS}"
+        f" --output {artifacts_dir}/right/output.txt"
+        f" --data-dir {artifacts_dir}/right"
         f" --length {TEST_DURATION}"
         f" --step-size {STEP_SIZE}"
-        f" --host {dest_host_addr}"
+        f" --host {left_host_addr}"
         f" --delay {RUNNER_DELAY}"
         f" --title-extra {title}"
         " --socket-stats"
     )
     if DEBUG_LOGS:
-        cmd += f" --log-file {artifacts_dir}/down/debug.log"
+        cmd += f" --log-file {artifacts_dir}/right/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
