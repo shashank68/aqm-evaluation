@@ -42,8 +42,8 @@ title += "OFFLD_" if OFFLOADS else ""
 
 ###############################
 
-client_router_latency = TOTAL_LATENCY / 16
-router_router_latency = 3 * TOTAL_LATENCY / 8
+client_router_latency = 1.5
+router_router_latency = 20
 
 client_router_latency = f"{client_router_latency}{LATENCY_UNIT}"
 router_router_latency = f"{router_router_latency}{LATENCY_UNIT}"
@@ -372,7 +372,8 @@ for tcpdump_output_file in tcpdump_output_files:
     bottleneck_bandwidth = ROUTER1_BW_INT
     if(os.path.basename(os.path.dirname(tcpdump_output_file))=='down'):
         bottleneck_bandwidth=ROUTER2_BW_INT
-
+    print("bottleneck_bandwidth")
+    print(bottleneck_bandwidth)
     for packet in packets:
         # if the packet belongs to a different bucket than the previous one, append
         # the stats to a new datapoint and create a new bucket
@@ -381,7 +382,7 @@ for tcpdump_output_file in tcpdump_output_files:
                 curr_packet_size_sum
                 * 8
                 * 100
-                / (bottleneck_bandwidth * 1000000 * STEP_SIZE)
+                / (int(bottleneck_bandwidth) * 1000000 * STEP_SIZE)
             )
 
             link_utilization_raw_values.append(

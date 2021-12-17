@@ -1,14 +1,14 @@
-(TOTAL_LATENCY, LATENCY_UNIT) = (80, "ms")  # Total Round trip latency
+(TOTAL_LATENCY, LATENCY_UNIT) = (46, "ms")  # Total Round trip latency
 
 # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
 (BOTTLENECK_BANDWIDTH, BW_UNIT) = ("80", "mbit")
-ROUTER1_BW = 80
-ROUTER2_BW = 150
+ROUTER1_BW = 15
+ROUTER2_BW = 100
 
-AQM = "fq_codel"  # set at router egress interface
+AQM = "fq_pie"  # set at router egress interface
 QDELAY_TARGET = "5ms"
-ECN = False
+ECN = True
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
@@ -16,9 +16,9 @@ DEBUG_LOGS = True
 FLENT_TEST_NAME_1 = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 FLENT_TEST_NAME_2 = "tcp_ndown"
 
-TEST_DURATION = 10
+TEST_DURATION = 200
 STEP_SIZE = 0.05  # Resolution in seconds
-UPLOAD_STREAMS = 1
+UPLOAD_STREAMS = 5
 RUNNER_DELAY = 0  # Delay before starting netperf etc..
 
 OFFLOADS = True

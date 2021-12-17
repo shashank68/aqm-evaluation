@@ -13,9 +13,9 @@ from tqdm import tqdm
 NUM_PROCESSES = 2
 
 QDISCS = ["fq_codel", "fq_pie", "cake"]
-FLOWS = [1, 3, 16]
+FLOWS = [5]
 BOTTLENECK_BANDWIDTHS = [80, 160, 1000]
-RTTS = [4, 40, 80, 800]
+RTTS = [46]
 ECN = ["No", "Yes"]
 NO_OFFLOADS = ["No", "Yes"]
 DURATIONS = [200]
