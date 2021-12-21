@@ -322,22 +322,6 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
-print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
-root_dir = os.getcwd()
-for subdir in ['up', 'down']:
-    os.chdir(artifacts_dir + '/' + subdir)
-    res_file = glob.glob("*.gz")[0]
-    os.makedirs("plots", exist_ok=True)
-
-    for plot_title in PLOT_TITLES:
-        exec_subprocess(
-            f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
-
-    os.chdir(root_dir)
-
-print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
-
-
 ####### LINK UTILISATION COMPUTATION #######
 for tcpdump_output_file in tcpdump_output_files:
     packets = []
@@ -349,7 +333,8 @@ for tcpdump_output_file in tcpdump_output_files:
     # get the timestamp and packet size of each of the packets
     timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
     packet_sizes = list(
-        map(lambda x: int(x.split(" ")[1][:-1]), re.findall(r"length [\d]*:", output))
+        map(lambda x: int(x.split(" ")[1][:-1]),
+            re.findall(r"length [\d]*:", output))
     )
 
     for i, pckt_size in enumerate(packet_sizes):
@@ -370,10 +355,9 @@ for tcpdump_output_file in tcpdump_output_files:
     seq = 1.0
 
     bottleneck_bandwidth = ROUTER1_BW_INT
-    if(os.path.basename(os.path.dirname(tcpdump_output_file))=='down'):
-        bottleneck_bandwidth=ROUTER2_BW_INT
-    print("bottleneck_bandwidth")
-    print(bottleneck_bandwidth)
+    if(os.path.basename(os.path.dirname(tcpdump_output_file)) == 'down'):
+        bottleneck_bandwidth = ROUTER2_BW_INT
+
     for packet in packets:
         # if the packet belongs to a different bucket than the previous one, append
         # the stats to a new datapoint and create a new bucket
@@ -423,6 +407,21 @@ for tcpdump_output_file in tcpdump_output_files:
     # Alter the existing gz file to include the additional content
     with gzip.open(results_file, "wb") as f:
         f.write(json.dumps(results_file_content).encode("UTF-8"))
+
+print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
+root_dir = os.getcwd()
+for subdir in ['up', 'down']:
+    os.chdir(artifacts_dir + '/' + subdir)
+    res_file = glob.glob("*.gz")[0]
+    os.makedirs("plots", exist_ok=True)
+
+    for plot_title in PLOT_TITLES:
+        exec_subprocess(
+            f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
+
+    os.chdir(root_dir)
+
+print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
 
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
 # os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
