@@ -10,14 +10,12 @@ from nest.engine.exec import exec_subprocess
 from tqdm import tqdm
 
 # Number of parallel processes to run
-NUM_PROCESSES = 2
+NUM_PROCESSES = 1
 
 QDISCS = ["fq_codel", "fq_pie", "cake"]
 FLOWS = [5]
-BOTTLENECK_BANDWIDTHS = [80, 160, 1000]
-RTTS = [46]
 ECN = ["No", "Yes"]
-NO_OFFLOADS = ["No", "Yes"]
+NO_OFFLOADS = ["No"]
 DURATIONS = [200]
 RESULTS_DIR = "."
 
@@ -36,21 +34,19 @@ except FileNotFoundError:
 
 
 params_combinations = itertools.product(
-    QDISCS, FLOWS, BOTTLENECK_BANDWIDTHS, RTTS, ECN, NO_OFFLOADS, DURATIONS
+    QDISCS, FLOWS, ECN, NO_OFFLOADS, DURATIONS
 )
 
 all_cmds = []
 
 for combination in params_combinations:
-    RESULTS_DIR = "AQM={}/Flows={}/Bandwidth={}/RTT={}/ECN={}/No_Offloads={}".format(
+    RESULTS_DIR = "AQM={}/Flows={}/ECN={}/No_Offloads={}".format(
         *combination
     )
     all_cmds.append(
-        "python ../dumbbell_flent.py"
+        "python3 ../dumbbell_flent.py"
         " --qdisc {}"
         " --number_of_tcp_flows {}"
-        " --bottleneck_bw {}"
-        " --rtt {}"
         " --ecn {}"
         " --no_offloads {}"
         " --duration {}"

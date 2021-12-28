@@ -42,8 +42,8 @@ title += "OFFLD_" if OFFLOADS else ""
 
 ###############################
 
-client_router_latency = 1.5
-router_router_latency = 20
+client_router_latency = 6
+router_router_latency = 350
 
 client_router_latency = f"{client_router_latency}{LATENCY_UNIT}"
 router_router_latency = f"{router_router_latency}{LATENCY_UNIT}"
