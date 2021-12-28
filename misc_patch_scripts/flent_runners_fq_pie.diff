@@ -1,6 +1,24 @@
---- /usr/share/flent/flent/runners.py	2021-08-23 22:38:54.772700416 +0530
-+++ runners.py	2021-08-23 22:38:16.098127520 +0530
-@@ -2019,6 +2019,17 @@
+--- ./flent/runners.py	2021-06-25 02:49:14.000000000 +0530
++++ /usr/share/flent/flent/runners.py	2021-12-29 02:50:48.585674352 +0530
+@@ -1851,6 +1851,8 @@
+                      and not self.ss_header_re.search(sp)]
+ 
+         for sp in sub_parts:
++            if "netserver" in sp:
++                continue
+             pid = self.pid_re.search(sp)
+             if None is pid:
+                 continue
+@@ -1964,7 +1966,7 @@
+ 
+         filt = ""
+         for p in self.exclude_ports:
+-            filt = "{} and dport != {}".format(filt, p)
++            filt = "{} and dport != {} and sport != {}".format(filt, p, p)
+ 
+         return "{bash} {script} -I {interval:.2f} " \
+             "-c {count:.0f} -H {host} -t '{target}' -f '{filt}'".format(
+@@ -2019,6 +2021,17 @@
                     r"dropped (?P<dropped_pie>\d+) "
                     r"maxq (?P<maxq>\d+) "
                     r"ecn_mark (?P<ecn_mark>\d+)"),

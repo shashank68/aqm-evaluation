@@ -26,6 +26,7 @@ UPLOAD_STREAMS = args.number_of_tcp_flows or UPLOAD_STREAMS
 BOTTLENECK_BANDWIDTH = args.bottleneck_bw or BOTTLENECK_BANDWIDTH
 ROUTER1_BW_INT = args.router1_bw or ROUTER1_BW
 ROUTER2_BW_INT = args.router2_bw or ROUTER2_BW
+
 TOTAL_LATENCY = args.rtt or TOTAL_LATENCY
 QDELAY_TARGET = args.qdelay_target or QDELAY_TARGET
 TEST_DURATION = args.duration or TEST_DURATION
@@ -42,8 +43,8 @@ title += "OFFLD_" if OFFLOADS else ""
 
 ###############################
 
-client_router_latency = 6
-router_router_latency = 350
+client_router_latency = CLIENT_ROUTER_LATENCY
+router_router_latency = ROUTER_ROUTER_LATENCY
 
 client_router_latency = f"{client_router_latency}{LATENCY_UNIT}"
 router_router_latency = f"{router_router_latency}{LATENCY_UNIT}"
@@ -213,12 +214,12 @@ left_router_connection.set_attributes(
 right_router_connection.set_attributes(
     ROUTER2_BW, router_router_latency, AQM, **qdisc_kwargs
 )
-oldpath = os. getcwd()
+oldpath = os.getcwd()
 artifacts_dir = f"""{RESULTS_DIR}/{title}{time.strftime("%d-%m_%H:%M:%S.dump")}"""
 os.makedirs(artifacts_dir, exist_ok=True)
 os.chdir(artifacts_dir)
-os.makedirs("up", exist_ok=True)
-os.makedirs("down", exist_ok=True)
+os.makedirs("left", exist_ok=True)
+os.makedirs("right", exist_ok=True)
 os.chdir(oldpath)
 
 workers_list = []
@@ -233,44 +234,44 @@ for i in range(TOTAL_NODES_PER_SIDE):
     exec_subprocess(cmd)
 
 for i in range(TOTAL_NODES_PER_SIDE):
-    src_node = left_nodes[i]
-    dest_node = right_nodes[i]
-    src_host_addr = left_node_connections[i][0].address.get_addr(with_subnet=False)
-    dest_host_addr = right_node_connections[i][0].address.get_addr(with_subnet=False)
+    left_node = left_nodes[i]
+    right_node = right_nodes[i]
+    left_host_addr = left_node_connections[i][0].address.get_addr(with_subnet=False)
+    right_host_addr = right_node_connections[i][0].address.get_addr(with_subnet=False)
 
     if not OFFLOADS:
         left_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
         right_node_connections[i][0].disable_offload(OFFLOAD_TYPES)
 
     if ECN:
-        src_node.configure_tcp_param("ecn", 1)
-        dest_node.configure_tcp_param("ecn", 1)
+        left_node.configure_tcp_param("ecn", 1)
+        right_node.configure_tcp_param("ecn", 1)
 
     ###  UPLOAD FLOW  ###
     cmd = (
-        f"ip netns exec {src_node.id} flent {FLENT_TEST_NAME_1} "
+        f"ip netns exec {left_node.id} flent {FLENT_TEST_NAME} "
         f" --test-parameter qdisc_stats_interfaces={left_router_connection.id}"
         f" --test-parameter qdisc_stats_hosts={left_router.id}"
         f" --test-parameter upload_streams={UPLOAD_STREAMS}"
-        f" --output {artifacts_dir}/up/output.txt"
-        f" --data-dir {artifacts_dir}/up"
+        f" --output {artifacts_dir}/left/output.txt"
+        f" --data-dir {artifacts_dir}/left"
         f" --length {TEST_DURATION}"
         f" --step-size {STEP_SIZE}"
-        f" --host {dest_host_addr}"
+        f" --host {right_host_addr}"
         f" --delay {RUNNER_DELAY}"
         f" --title-extra {title}"
         " --socket-stats"
     )
     if DEBUG_LOGS:
-        cmd += f" --log-file {artifacts_dir}/up/debug.log"
+        cmd += f" --log-file {artifacts_dir}/left/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
-    tcpdump_output_file = f"{artifacts_dir}/up/tcpdump.out"
+    tcpdump_output_file = f"{artifacts_dir}/left/tcpdump.out"
     tcpdump_output_files.append(tcpdump_output_file)
 
     # run tcpdump on the right router to analyse packets and compute link utilization
-    tcpdump_cmd = f"ip netns exec {dest_node.id} tcpdump -i {dest_node.interfaces[0].id} -evvv -tt -Q in"
+    tcpdump_cmd = f"ip netns exec {right_router.id} tcpdump -i {right_router_connection.id} -evvv -tt -Q in"
     tcpdump_processes.append(
         subprocess.Popen(
             shlex.split(tcpdump_cmd),
@@ -281,29 +282,29 @@ for i in range(TOTAL_NODES_PER_SIDE):
 
     ###   DOWNLOAD FLOW  ###
     cmd = (
-        f"ip netns exec {dest_node.id} flent {FLENT_TEST_NAME_1} "
+        f"ip netns exec {right_node.id} flent {FLENT_TEST_NAME} "
         f" --test-parameter qdisc_stats_interfaces={right_router_connection.id}"
         f" --test-parameter qdisc_stats_hosts={right_router.id}"
         f" --test-parameter upload_streams={UPLOAD_STREAMS}"
-        f" --output {artifacts_dir}/down/output.txt"
-        f" --data-dir {artifacts_dir}/down"
+        f" --output {artifacts_dir}/right/output.txt"
+        f" --data-dir {artifacts_dir}/right"
         f" --length {TEST_DURATION}"
         f" --step-size {STEP_SIZE}"
-        f" --host {src_host_addr}"
+        f" --host {left_host_addr}"
         f" --delay {RUNNER_DELAY}"
         f" --title-extra {title}"
         " --socket-stats"
     )
     if DEBUG_LOGS:
-        cmd += f" --log-file {artifacts_dir}/down/debug.log"
+        cmd += f" --log-file {artifacts_dir}/right/debug.log"
 
     workers_list.append(Process(target=exec_subprocess, args=(cmd,)))
 
-    tcpdump_output_file = f"{artifacts_dir}/down/tcpdump.out"
+    tcpdump_output_file = f"{artifacts_dir}/right/tcpdump.out"
     tcpdump_output_files.append(tcpdump_output_file)
 
     # run tcpdump on the left router to analyse packets and compute link utilization
-    tcpdump_cmd = f"ip netns exec {src_node.id} tcpdump -i {src_node.interfaces[0].id} -evvv -tt -Q in"
+    tcpdump_cmd = f"ip netns exec {left_router.id} tcpdump -i {left_router_connection.id} -evvv -tt -Q in"
     tcpdump_processes.append(
         subprocess.Popen(
             shlex.split(tcpdump_cmd),
@@ -318,11 +319,14 @@ for worker in workers_list:
 
 for i in range(TOTAL_NODES_PER_SIDE):
     workers_list[i].join()
-    # tcpdump_processes[i].terminate()
+
+for proc in tcpdump_processes:
+    proc.terminate()
 
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
 ####### LINK UTILISATION COMPUTATION #######
+
 for tcpdump_output_file in tcpdump_output_files:
     packets = []
     f = open(tcpdump_output_file, "r")
@@ -333,8 +337,7 @@ for tcpdump_output_file in tcpdump_output_files:
     # get the timestamp and packet size of each of the packets
     timestamps = list(map(float, re.findall(r"^\d*\.\d*", output, re.M)))
     packet_sizes = list(
-        map(lambda x: int(x.split(" ")[1][:-1]),
-            re.findall(r"length [\d]*:", output))
+        map(lambda x: int(x.split(" ")[1][:-1]), re.findall(r"length [\d]*:", output))
     )
 
     for i, pckt_size in enumerate(packet_sizes):
@@ -354,9 +357,11 @@ for tcpdump_output_file in tcpdump_output_files:
     percent_sum = 0
     seq = 1.0
 
-    bottleneck_bandwidth = ROUTER1_BW_INT
-    if(os.path.basename(os.path.dirname(tcpdump_output_file)) == 'down'):
-        bottleneck_bandwidth = ROUTER2_BW_INT
+    bottleneck_bandwidth = (
+        ROUTER1_BW_INT
+        if os.path.basename(os.path.dirname(tcpdump_output_file)) == "right"
+        else ROUTER2_BW_INT
+    )
 
     for packet in packets:
         # if the packet belongs to a different bucket than the previous one, append
@@ -410,18 +415,23 @@ for tcpdump_output_file in tcpdump_output_files:
 
 print("\n🎉 STARTING PLOT EXTRACTION 🎉\n")
 root_dir = os.getcwd()
-for subdir in ['up', 'down']:
-    os.chdir(artifacts_dir + '/' + subdir)
+for subdir in ["left", "right"]:
+    os.chdir(artifacts_dir + "/" + subdir)
     res_file = glob.glob("*.gz")[0]
     os.makedirs("plots", exist_ok=True)
 
     for plot_title in PLOT_TITLES:
         exec_subprocess(
-            f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png")
+            f"flent {res_file} --plot {plot_title} -o plots/{plot_title}.png"
+        )
 
     os.chdir(root_dir)
+    os.chown(
+        f"{artifacts_dir}/{subdir}/plots",
+        int(os.getenv("SUDO_UID")),
+        int(os.getenv("SUDO_GID")),
+    )
 
 print("\n🎉 FINISHED PLOT EXTRACTION 🎉\n")
 
 os.chown(artifacts_dir, int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))
-# os.chown(f"{artifacts_dir}/plots", int(os.getenv("SUDO_UID")), int(os.getenv("SUDO_GID")))

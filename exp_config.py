@@ -1,5 +1,8 @@
 (TOTAL_LATENCY, LATENCY_UNIT) = (724, "ms")  # Total Round trip latency
 
+ROUTER_ROUTER_LATENCY = 720
+CLIENT_ROUTER_LATENCY = 1
+
 # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
 (BOTTLENECK_BANDWIDTH, BW_UNIT) = ("80", "mbit")
@@ -13,8 +16,7 @@ ECN = True
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
 DEBUG_LOGS = True
-FLENT_TEST_NAME_1 = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
-FLENT_TEST_NAME_2 = "tcp_ndown"
+FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 
 TEST_DURATION = 200
 STEP_SIZE = 0.05  # Resolution in seconds
