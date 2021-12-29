@@ -359,7 +359,7 @@ for tcpdump_output_file in tcpdump_output_files:
 
     bottleneck_bandwidth = (
         ROUTER1_BW_INT
-        if os.path.basename(os.path.dirname(tcpdump_output_file)) == "right"
+        if os.path.basename(os.path.dirname(tcpdump_output_file)) == "left"
         else ROUTER2_BW_INT
     )
 
