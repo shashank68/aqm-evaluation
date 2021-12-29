@@ -1,17 +1,18 @@
-(TOTAL_LATENCY, LATENCY_UNIT) = (630, "ms")  # Total Round trip latency
+(TOTAL_LATENCY, LATENCY_UNIT) = (724, "ms")  # Total Round trip latency
 
-ROUTER_ROUTER_LATENCY = 313  # Total / 2 (approx)
-CLIENT_ROUTER_LATENCY = 1
+ROUTER_ROUTER_LATENCY = 350  # Total / 2 (approx)
+CLIENT_ROUTER_LATENCY = 6
 
 # Client to router Bandwidth will be 10 * Bottleneck bandwidth
 
 (BOTTLENECK_BANDWIDTH, BW_UNIT) = ("80", "mbit")
-ROUTER1_BW = 4
-ROUTER2_BW = 19
+ROUTER1_BW = 3
+ROUTER2_BW = 20
 
 AQM = "fq_codel"  # set at router egress interface
 QDELAY_TARGET = "5ms"
-ECN = True
+AQM_INTERVAL = "724ms"
+ECN = False
 
 TOTAL_NODES_PER_SIDE = 1  # Number of clients
 
