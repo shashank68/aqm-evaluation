@@ -251,7 +251,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
     ###  UPLOAD FLOW  ###
     cmd = (
         f"ip netns exec {left_node.id} flent {FLENT_TEST_NAME} "
-        f" --test-parameter qdisc_stats_interfaces={left_router_connection.id}"
+        f" --test-parameter qdisc_stats_interfaces={left_router_connection.ifb.id}"
         f" --test-parameter qdisc_stats_hosts={left_router.id}"
         f" --test-parameter upload_streams={UPLOAD_STREAMS}"
         f" --output {artifacts_dir}/left/output.txt"
@@ -284,7 +284,7 @@ for i in range(TOTAL_NODES_PER_SIDE):
     ###   DOWNLOAD FLOW  ###
     cmd = (
         f"ip netns exec {right_node.id} flent {FLENT_TEST_NAME} "
-        f" --test-parameter qdisc_stats_interfaces={right_router_connection.id}"
+        f" --test-parameter qdisc_stats_interfaces={right_router_connection.ifb.id}"
         f" --test-parameter qdisc_stats_hosts={right_router.id}"
         f" --test-parameter upload_streams={UPLOAD_STREAMS}"
         f" --output {artifacts_dir}/right/output.txt"
@@ -318,11 +318,10 @@ print("\n🤞 STARTED FLENT EXECUTION 🤞\n")
 for worker in workers_list:
     worker.start()
 
-for i in range(TOTAL_NODES_PER_SIDE):
+for i in range(2):
     workers_list[i].join()
+    tcpdump_processes[i].terminate()
 
-for proc in tcpdump_processes:
-    proc.terminate()
 
 print("\n🎉 FINISHED FLENT EXECUTION 🎉\n")
 
