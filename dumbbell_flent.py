@@ -180,7 +180,8 @@ if AQM == "cake":
     qdisc_kwargs["rtt"] = f"{TOTAL_LATENCY}{LATENCY_UNIT}"
 else:
     qdisc_kwargs["target"] = QDELAY_TARGET
-    qdisc_kwargs["interval"] = AQM_INTERVAL
+    if AQM == "fq_codel":
+        qdisc_kwargs["interval"] = AQM_INTERVAL
 
     if ECN:
         qdisc_kwargs["ecn"] = ""

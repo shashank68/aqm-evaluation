@@ -9,7 +9,7 @@ CLIENT_ROUTER_LATENCY = 6
 ROUTER1_BW = 3
 ROUTER2_BW = 20
 
-AQM = "fq_codel"  # set at router egress interface
+AQM = "fq_pie"  # set at router egress interface
 QDELAY_TARGET = "40ms"
 AQM_INTERVAL = "724ms"
 ECN = True
