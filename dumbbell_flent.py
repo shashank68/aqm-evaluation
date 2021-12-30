@@ -185,7 +185,8 @@ else:
 
     if ECN:
         qdisc_kwargs["ecn"] = ""
-
+        if AQM == "fq_pie":
+            qdisc_kwargs["ecn_prob"] = "100"
 
 # Setting up the attributes of the connections between
 # the nodes on the left-side and the left-router
