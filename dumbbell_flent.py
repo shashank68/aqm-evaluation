@@ -368,12 +368,12 @@ for tcpdump_output_file in tcpdump_output_files:
     for packet in packets:
         # if the packet belongs to a different bucket than the previous one, append
         # the stats to a new datapoint and create a new bucket
-        if packet[0] - curr_timestamp > STEP_SIZE:
+        if packet[0] - curr_timestamp > LINK_UTIL_GRAPH_STEP_SIZE:
             link_utilization_percent = (
                 curr_packet_size_sum
                 * 8
                 * 100
-                / (int(bottleneck_bandwidth) * 1000000 * STEP_SIZE)
+                / (int(bottleneck_bandwidth) * 1000000 * LINK_UTIL_GRAPH_STEP_SIZE)
             )
 
             link_utilization_raw_values.append(

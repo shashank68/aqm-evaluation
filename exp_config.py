@@ -20,7 +20,8 @@ DEBUG_LOGS = True
 FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 
 TEST_DURATION = 30
-STEP_SIZE = 0.5  # Resolution in seconds
+LINK_UTIL_GRAPH_STEP_SIZE = 0.5
+STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 20
 RUNNER_DELAY = 0  # Delay before starting netperf etc..
 
