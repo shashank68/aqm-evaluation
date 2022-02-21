@@ -9,7 +9,7 @@ CLIENT_ROUTER_LATENCY = 6
 ROUTER1_BW = 3
 ROUTER2_BW = 20
 
-AQM = "fq_pie"  # set at router egress interface
+AQM = "fq_codel"  # set at router egress interface
 QDELAY_TARGET = "40ms"
 AQM_INTERVAL = "724ms"
 ECN = True
@@ -19,11 +19,12 @@ TOTAL_NODES_PER_SIDE = 1  # Number of clients
 DEBUG_LOGS = True
 FLENT_TEST_NAME = "tcp_nup"  # e.g rrul, tcp_nup, cubic_reno, tcp_1up
 
-TEST_DURATION = 30
+TEST_DURATION = 200
 LINK_UTIL_GRAPH_STEP_SIZE = 0.5
 STEP_SIZE = 0.05  # Resolution in seconds
 UPLOAD_STREAMS = 20
 RUNNER_DELAY = 0  # Delay before starting netperf etc..
+STREAM_DELAYS = "0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9"
 
 OFFLOADS = True
 OFFLOAD_TYPES = ["gso", "gro", "tso"]
